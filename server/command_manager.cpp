@@ -2,7 +2,7 @@
 #include "../common/basic_session.h"
 #include "../common/server_observer_protocol.h"
 #include <boost/beast/core.hpp>
-#include <json/json.h>
+#include <json_spirit/json_spirit.h>
 #include <utility>
 #include <type_traits>
 #include <stdexcept>
@@ -12,10 +12,11 @@ using boost::asio::ip::tcp;
 using boost::asio::yield_context;
 using namespace boost::beast::websocket;
 using namespace cnc::server;
+using namespace cnc::common::server;
 using observer::protocol;
 using types = protocol::types;
 
-types type_from_uint(Json::UInt value)
+types type_from_uint(unsigned int value)
 {
 	auto type = static_cast<types>(value);
 	if (type < types::LAST_MEMBER_UNUSED && type > types::FIRST_MEMBER_UNUSED)
@@ -63,8 +64,8 @@ void command_session::run(yield_context yield)
 			boost::beast::multi_buffer buffer;
 			m_socket.async_read(buffer, yield);
 			auto msg = boost::beast::buffers_to_string(buffer);
-			Json::Value json;
-			Json::Reader().parse(msg, json, false);
+			json_spirit::Value json;
+			json_spirit::read(msg, json);
 
 			auto raw_type = json.get("type", static_cast<std::underlying_type<types>::type>(types::FIRST_MEMBER_UNUSED)).asUInt();
 			auto type = static_cast<types>(raw_type);
@@ -78,7 +79,7 @@ void command_session::run(yield_context yield)
 				m_initialized = true;
 				m_socket.text(true);
 
-				Json::Value response;
+				json::::Value response;
 				response["type"] = static_cast<std::underlying_type<types>::type>(types::OK);
 				m_socket.async_write(Json::FastWriter().write(response), yield);
 				break;

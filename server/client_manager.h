@@ -4,8 +4,6 @@
 #include <exception>
 
 namespace cnc { namespace server {
-	class client_manager;
-
 	class potential_client : protected common::server::client::session
 	{
 		bool m_initialized = false;

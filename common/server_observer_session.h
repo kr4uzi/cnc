@@ -1,6 +1,7 @@
 #pragma once
 #include "basic_session.h"
 #include "server_observer_protocol.h"
+#include <filesystem>
 
 namespace cnc {
 	namespace common {
@@ -32,6 +33,11 @@ namespace cnc {
 						protocol::clients clients;
 					};
 					hello_result hello(boost::asio::yield_context yield);
+
+					using recv_file_result = err_or_empty_ok_result;
+					recv_file_result recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size, boost::asio::yield_context ctx);
+					using send_file_result = err_or_empty_ok_result;
+					send_file_result send_file(const std::filesystem::path &path, std::ostream &out, boost::asio::yield_context ctx);
 
 					struct observe_result
 					{

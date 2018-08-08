@@ -1,10 +1,12 @@
 #include "server_observer_session.h"
 #include "serialize_network.h"
+#include "serialize_filesystem.h"
 #include <boost/serialization/vector.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <sstream>
 using namespace cnc::common::server::observer;
+using boost::asio::yield_context;
 using boost::asio::ip::tcp;
 using types = protocol::types;
 
@@ -77,6 +79,37 @@ session::hello_result session::hello(boost::asio::yield_context yield)
 	}
 
 	return { false, "", protocol::clients_from_string(recv_msg(response.get_payload_size(), yield)) };
+}
+
+session::recv_file_result session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size, yield_context yield)
+{
+	send_msg(types::RECV_FILE, to_string(path), yield);
+	auto result = recv_err_or_empty_ok(recv_header(yield), yield);
+	if (result.err)
+		return { true, result.err_msg };
+
+	send_stream(types::BLOB, in, size, yield);
+	return { false };
+}
+
+session::send_file_result session::send_file(const std::filesystem::path &path, std::ostream &out, yield_context yield)
+{
+	send_msg(types::SEND_FILE, to_string(path), yield);
+	auto result = recv_err_or_empty_ok(recv_header(yield), yield);
+	if (result.err)
+		return { true, result.err_msg };
+
+	auto response = recv_header(yield);
+	switch (response.get_type())
+	{
+	case types::BLOB:
+		break;
+	default:
+		throw unexpected_message_error(*this, response);
+	}
+
+	recv_stream(out, response.get_payload_size(), yield);
+	return { false };
 }
 
 session::unobserve_result session::quit(boost::asio::yield_context yield)

@@ -24,6 +24,9 @@ namespace cnc {
 
 						// request types (* are async requests)
 						HELLO,			// server: payload: none, answer: {OK + client_data[]}|{ERROR + string}
+						RECV_FILE,		// payload: path, answer: OK|{ERROR + string}
+						SEND_FILE,		// payload: path, answer: OK|{ERROR + string}
+						BLOB,			// payload: byte[], answer: none
 						REGISTERED,		// observer*: payload: client_data, answer: none
 						UNREGISTERED,	// observer*: payload: mac, answer: none
 						OBSERVE,		// server: payload: mac, answer: {OK + client_log[]}|{ERROR + string}
