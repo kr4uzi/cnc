@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit_tests", "unit_tests\un
 		{3772F55C-E4FD-44AF-AF7C-81BAD1F8DB8A} = {3772F55C-E4FD-44AF-AF7C-81BAD1F8DB8A}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "json_spirit", "json_spirit\json_spirit.vcxproj", "{0FD4C9AC-B61D-49D5-A41D-22E6204DFB6A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -67,6 +69,14 @@ Global
 		{C4AF1F80-22F9-4307-A488-41B6756EDD8D}.Release|x64.Build.0 = Release|x64
 		{C4AF1F80-22F9-4307-A488-41B6756EDD8D}.Release|x86.ActiveCfg = Release|Win32
 		{C4AF1F80-22F9-4307-A488-41B6756EDD8D}.Release|x86.Build.0 = Release|Win32
+		{0FD4C9AC-B61D-49D5-A41D-22E6204DFB6A}.Debug|x64.ActiveCfg = Debug|x64
+		{0FD4C9AC-B61D-49D5-A41D-22E6204DFB6A}.Debug|x64.Build.0 = Debug|x64
+		{0FD4C9AC-B61D-49D5-A41D-22E6204DFB6A}.Debug|x86.ActiveCfg = Debug|Win32
+		{0FD4C9AC-B61D-49D5-A41D-22E6204DFB6A}.Debug|x86.Build.0 = Debug|Win32
+		{0FD4C9AC-B61D-49D5-A41D-22E6204DFB6A}.Release|x64.ActiveCfg = Release|x64
+		{0FD4C9AC-B61D-49D5-A41D-22E6204DFB6A}.Release|x64.Build.0 = Release|x64
+		{0FD4C9AC-B61D-49D5-A41D-22E6204DFB6A}.Release|x86.ActiveCfg = Release|Win32
+		{0FD4C9AC-B61D-49D5-A41D-22E6204DFB6A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

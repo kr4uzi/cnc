@@ -32,8 +32,5 @@
     <ClInclude Include="command_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="command_protocol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
