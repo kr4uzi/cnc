@@ -67,21 +67,12 @@ void command_session::run(yield_context yield)
 			json_spirit::Value json;
 			json_spirit::read(msg, json);
 
-			auto raw_type = json.get("type", static_cast<std::underlying_type<types>::type>(types::FIRST_MEMBER_UNUSED)).asUInt();
+			auto raw_type = json.get("type", static_cast<std::underlying_type<types>::type>(types::FIRST_MEMBER_UNUSED)).getUInt64();
 			auto type = static_cast<types>(raw_type);
 			switch (type)
 			{
 			case types::HELLO:
 			{
-				if (m_initialized)
-					throw session_error("already initialized");
-
-				m_initialized = true;
-				m_socket.text(true);
-
-				json::::Value response;
-				response["type"] = static_cast<std::underlying_type<types>::type>(types::OK);
-				m_socket.async_write(Json::FastWriter().write(response), yield);
 				break;
 			}
 			case types::OBSERVE:
@@ -89,7 +80,7 @@ void command_session::run(yield_context yield)
 			case types::UNOBSERVE:
 				break;
 			default:
-				throw session_error("unknown type");
+				throw "unknown type";
 			}
 		}
 		catch (std::exception &e)

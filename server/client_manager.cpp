@@ -50,7 +50,7 @@ void client_manager::accept(yield_context yield)
 			{
 				m_potentials.erase(iter);
 			});
-			auto err_conn = sess.on_error.connect([this, &sess](std::exception &e)
+			auto err_conn = sess.on_error.connect([this, &sess](auto ptr)
 			{
 				sess.close();
 			});
@@ -77,7 +77,7 @@ void client_manager::accept(yield_context yield)
 				{
 					m_clients.erase(iter);
 				});
-				client.on_error.connect([this, &client]
+				client.on_error.connect([this, &client](auto ptr)
 				{
 					client.close();
 				});
@@ -85,9 +85,9 @@ void client_manager::accept(yield_context yield)
 				client.run(yield);
 			});
 		}
-		catch (std::exception &e)
+		catch (...)
 		{
-			on_error(e);
+			on_error(std::current_exception());
 		}
 	}
 }
@@ -197,7 +197,7 @@ void client::run(yield_context yield)
 		}
 		catch (...)
 		{
-			if (!is_closing())
+			if (!closing())
 				on_error(std::current_exception());
 		}
 	}

@@ -8,12 +8,12 @@
 
 namespace cnc {
 	namespace server {
-		class potential_command_client :
+		class potential_command_client
 		{
 			bool m_initialized = false;
 
 		protected:
-			boost::beast::websocket::stream<boost::asio::ip::tcp> m_socket;
+			boost::beast::websocket::stream<boost::asio::ip::tcp::socket> m_socket;
 
 		public:
 			potential_command_client(boost::asio::ip::tcp::socket socket);
@@ -27,7 +27,7 @@ namespace cnc {
 			bool m_running = false;
 
 		protected:
-			boost::beast::websocket::stream<boost::asio::ip::tcp> m_socket;
+			boost::beast::websocket::stream<boost::asio::ip::tcp::socket> m_socket;
 
 		public:
 			command_session(boost::asio::ip::tcp::socket socket);

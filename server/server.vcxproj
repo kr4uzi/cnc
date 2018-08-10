@@ -142,10 +142,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="client_manager.h" />
-    <ClInclude Include="command_manager.h" />
+    <ClInclude Include="command_client_manager.h" />
+    <ClInclude Include="command_client_websocket.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="command_manager.cpp" />
+    <ClCompile Include="command_client_websocket.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="client_manager.cpp" />
   </ItemGroup>

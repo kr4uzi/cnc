@@ -4,7 +4,7 @@
 #include <exception>
 
 namespace cnc { namespace server {
-	class potential_client : protected common::server::client::session
+	class potential_client : public common::server::client::session
 	{
 		bool m_initialized = false;
 		
@@ -27,7 +27,7 @@ namespace cnc { namespace server {
 		using session::close;
 	};
 
-	class client : protected potential_client
+	class client : public potential_client
 	{
 	private:
 		bool m_running = false;

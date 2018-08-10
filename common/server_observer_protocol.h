@@ -123,7 +123,7 @@ namespace cnc {
 					case types::HELLO:		return os << "HELLO";
 					case types::REGISTERED:	return os << "REGISTERED";
 					case types::UNREGISTERED: return os << "UNREGISTERED";
-					case types::UNREGISTERED: return os << "OBSERVE";
+					case types::OBSERVE:	return os << "OBSERVE";
 					case types::LOG:		return os << "LOG";
 					case types::UNOBSERVE:	return os << "UNOBSERVE";
 					case types::CONNECT:	return os << "CONNECT";

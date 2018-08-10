@@ -45,10 +45,11 @@ namespace cnc {
 			typename S::protocol::header get_header() const { return m_header; }
 		};
 
-		template<typename Protocol>
+		template<typename Protocol, typename socket_type_t = boost::asio::ip::tcp::socket>
 		class basic_session
 		{
 		public:
+			using socket_type = typename socket_type_t;
 			using protocol = typename Protocol;
 			using session_error = session_error<basic_session<Protocol>>;
 			using unexpected_message_error = unexpected_message_error<basic_session<Protocol>>;
@@ -58,12 +59,12 @@ namespace cnc {
 			bool m_closing = false;
 
 		protected:
-			boost::asio::ip::tcp::socket m_socket;
+			socket_type m_socket;
 
 		public:
 			boost::signals2::signal<void()> on_close;
 
-			basic_session(boost::asio::ip::tcp::socket socket, unsigned int timeout = 1000)
+			basic_session(socket_type socket, unsigned int timeout = 1000)
 				: m_socket(std::move(socket))
 			{
 				set_timeout(m_socket, timeout);
@@ -91,8 +92,8 @@ namespace cnc {
 				on_close();
 			}
 
-			bool is_closed() const { return m_closed; }
-			bool is_closing() const { return m_closing; }
+			bool closed() const { return m_closed; }
+			bool closing() const { return m_closing; }
 
 			typename protocol::header recv_header(boost::asio::yield_context yield_ctx)
 			{
