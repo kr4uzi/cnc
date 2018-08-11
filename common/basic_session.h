@@ -1,10 +1,14 @@
 #pragma once
 #include "header.h"
-#include <boost/asio.hpp>
-#include <boost/asio/spawn.hpp>
+#include <boost/asio/read.hpp>
+#include <boost/asio/write.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/use_future.hpp>
 #include <boost/signals2/signal.hpp>
+#include <array>
 #include <string>
 #include <vector>
+#include <future>
 #include <utility>
 #include <istream>
 #include <ostream>
@@ -95,19 +99,22 @@ namespace cnc {
 			bool closed() const { return m_closed; }
 			bool closing() const { return m_closing; }
 
-			typename protocol::header recv_header(boost::asio::yield_context yield_ctx)
+			[[nodiscard]]
+			std::future<typename protocol::header> recv_header()
 			{
 				std::array<std::uint8_t, protocol::header::get_size()> buffer;
-				boost::asio::async_read(m_socket, boost::asio::buffer(buffer), yield_ctx);
-				return protocol::header(buffer);
+				co_await boost::asio::async_read(m_socket, boost::asio::buffer(buffer), boost::asio::use_future);
+				co_return protocol::header(buffer);
 			}
 
-			void send_msg(typename protocol::types type, boost::asio::yield_context yield_ctx)
+			[[nodiscard]]
+			std::future<void> send_msg(typename protocol::types type)
 			{
-				send_msg(type, "", yield_ctx);
+				co_await send_msg(type, "");
 			}
 
-			void send_msg(typename protocol::types type, const std::string &msg, boost::asio::yield_context yield_ctx)
+			[[nodiscard]]
+			std::future<void> send_msg(typename protocol::types type, const std::string &msg)
 			{
 				typename protocol::header header(type, msg.length());
 				auto buffer = header.to_bytearray();
@@ -115,10 +122,11 @@ namespace cnc {
 				data.insert(data.end(), buffer.begin(), buffer.end());
 				data.insert(data.end(), msg.begin(), msg.end());
 
-				boost::asio::async_write(m_socket, boost::asio::buffer(data), yield_ctx);
+				co_await boost::asio::async_write(m_socket, boost::asio::buffer(data), boost::asio::use_future);
 			}
 
-			std::string recv_msg(std::uint64_t size, boost::asio::yield_context yield_ctx)
+			[[nodiscard]]
+			std::future<std::string> recv_msg(std::uint64_t size)
 			{
 				if (size >= std::string::npos)
 					throw new std::length_error("the expected message cannot fit into std::string");
@@ -126,15 +134,16 @@ namespace cnc {
 				std::string msg;
 				msg.resize(static_cast<std::size_t>(size));
 
-				boost::asio::async_read(m_socket, boost::asio::buffer(msg), yield_ctx);
-				return msg;
+				co_await boost::asio::async_read(m_socket, boost::asio::buffer(msg), boost::asio::use_future);
+				co_return msg;
 			}
 
-			void send_stream(typename protocol::types type, std::istream &in, std::uint64_t size, boost::asio::yield_context yield_ctx)
+			[[nodiscard]]
+			std::future<void> send_stream(typename protocol::types type, std::istream &in, std::uint64_t size)
 			{
 				typename protocol::header header(type, size);
 				auto buffer = header.to_bytearray();
-				boost::asio::async_write(m_socket, boost::asio::buffer(buffer), yield_ctx);
+				co_await boost::asio::async_write(m_socket, boost::asio::buffer(buffer), boost::asio::use_future);
 
 				while (size)
 				{
@@ -142,17 +151,18 @@ namespace cnc {
 					auto bytes = std::min<decltype(size)>(size, buffer.max_size());
 					in.read(buffer.data(), bytes);
 					size -= bytes;
-					boost::asio::async_write(m_socket, boost::asio::buffer(buffer, bytes), yield_ctx);
+					co_await boost::asio::async_write(m_socket, boost::asio::buffer(buffer, bytes), boost::asio::use_future);
 				}
 			}
 
-			void recv_stream(std::ostream &out, std::uint64_t size, boost::asio::yield_context yield_ctx)
+			[[nodiscard]]
+			std::future<void> recv_stream(std::ostream &out, std::uint64_t size)
 			{
 				while (size)
 				{
 					std::array<char, 4096> buffer;
 					auto bytes = std::min<decltype(size)>(buffer.max_size(), size);
-					boost::asio::async_read(m_socket, boost::asio::buffer(buffer.data(), bytes), yield_ctx);
+					co_await boost::asio::async_read(m_socket, boost::asio::buffer(buffer.data(), bytes), boost::asio::use_future);
 					out.write(buffer.data(), bytes);
 					size -= bytes;
 				}

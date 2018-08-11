@@ -88,6 +88,7 @@
       <AdditionalIncludeDirectories>..\.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/await %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -100,6 +101,7 @@
       <AdditionalIncludeDirectories>..\.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/await %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -114,6 +116,7 @@
       <AdditionalIncludeDirectories>..\.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/await %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -133,6 +136,7 @@
       <AdditionalIncludeDirectories>..\.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/await %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -143,16 +147,20 @@
   <ItemGroup>
     <ClInclude Include="client_manager.h" />
     <ClInclude Include="command_client_manager.h" />
-    <ClInclude Include="command_client_websocket.h" />
+    <ClInclude Include="command_client.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="command_client_websocket.cpp" />
+    <ClCompile Include="command_client_manager.cpp" />
+    <ClCompile Include="command_client.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="client_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\common.vcxproj">
       <Project>{3772f55c-e4fd-44af-af7c-81bad1f8db8a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\json_spirit\json_spirit.vcxproj">
+      <Project>{0fd4c9ac-b61d-49d5-a41d-22e6204dfb6a}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

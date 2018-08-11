@@ -4,9 +4,6 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
   <ItemDefinitionGroup>
-    <Link>
-      <AdditionalDependencies>json_spirit.lib;%(AdditionalDependencies);</AdditionalDependencies>
-    </Link>
     <ClCompile>
       <AdditionalIncludeDirectories>..\.;%(AdditionalIncludeDirectories);</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>JSON_SPIRIT_FUNCTION_EXPORT=;JSON_SPIRIT_EXPORT=;%(PreprocessorDefinitions)</PreprocessorDefinitions>

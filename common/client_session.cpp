@@ -3,7 +3,6 @@
 
 using namespace cnc::common;
 using namespace cnc::common::client;
-using boost::asio::yield_context;
 using types = protocol::types;
 
 session::session(boost::asio::ip::tcp::socket socket)
@@ -12,59 +11,60 @@ session::session(boost::asio::ip::tcp::socket socket)
 
 }
 
-session::hello_result session::hello(boost::asio::yield_context yield)
+std::future<session::hello_result> session::hello()
 {
-	return hello("", yield);
+	co_return co_await hello("");
 }
 
-session::hello_result session::hello(const std::string &msg, boost::asio::yield_context yield)
+std::future<session::hello_result> session::hello(const std::string &msg)
 {
-	send_msg(types::HELLO, msg, yield);
-	return recv_err_or_ok(recv_header(yield), yield);
+	co_await send_msg(types::HELLO, msg);
+	co_return co_await recv_err_or_ok(co_await recv_header());
 }
 
-session::create_directory_result session::create_directory(const std::filesystem::path &path, boost::asio::yield_context yield)
+std::future<session::create_directory_result> session::create_directory(const std::filesystem::path &path)
 {
-	send_msg(types::CREATE_DIRECTORY, path.string(), yield);
-	return recv_err_or_empty_ok(recv_header(yield), yield);
+	co_await send_msg(types::CREATE_DIRECTORY, path.string());
+	co_return co_await recv_err_or_empty_ok(co_await recv_header());
 }
 
-session::list_directory_result session::list_directory(const std::filesystem::path &path, boost::asio::yield_context yield)
+std::future<session::list_directory_result> session::list_directory(const std::filesystem::path &path)
 {
-	send_msg(types::LIST_DIRECTORY, path.string(), yield);
-	auto response = recv_header(yield);
+	co_await send_msg(types::LIST_DIRECTORY, path.string());
+	auto response = co_await recv_header();
 	switch (response.get_type())
 	{
 	case types::OK:
 		break;
 	case types::ERR:
-		return { true, recv_msg(response.get_payload_size(), yield) };
+		co_return list_directory_result{ true, co_await recv_msg(response.get_payload_size()) };
 	default:
 		throw unexpected_message_error(*this, response);
 	}
 
-	return { false, "", protocol::directory_view_from_string(recv_msg(response.get_payload_size(), yield)) };
+	auto msg = co_await recv_msg(response.get_payload_size());
+	co_return list_directory_result{ false, "", protocol::directory_view_from_string(msg) };
 }
 
-session::recv_file_result session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size, boost::asio::yield_context yield)
+std::future<session::recv_file_result> session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size)
 {
-	send_msg(types::RECV_FILE, to_string(path), yield);
-	auto result = recv_err_or_empty_ok(recv_header(yield), yield);
+	co_await send_msg(types::RECV_FILE, to_string(path));
+	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
 	if (result.err)
-		return { true, result.err_msg };
+		co_return recv_file_result{ true, result.err_msg };
 
-	send_stream(types::BLOB, in, size, yield);
-	return { false };
+	co_await send_stream(types::BLOB, in, size);
+	co_return recv_file_result{ false };
 }
 
-session::send_file_result session::send_file(const std::filesystem::path &path, std::ostream &out, boost::asio::yield_context yield)
+std::future<session::send_file_result> session::send_file(const std::filesystem::path &path, std::ostream &out)
 {
-	send_msg(types::SEND_FILE, to_string(path), yield);
-	auto result = recv_err_or_empty_ok(recv_header(yield), yield);
+	co_await send_msg(types::SEND_FILE, to_string(path));
+	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
 	if (result.err)
-		return { true, result.err_msg };
+		co_return send_file_result{ true, result.err_msg };
 
-	auto response = recv_header(yield);
+	auto response = co_await recv_header();
 	switch (response.get_type())
 	{
 	case types::BLOB:
@@ -73,29 +73,29 @@ session::send_file_result session::send_file(const std::filesystem::path &path, 
 		throw unexpected_message_error(*this, response);
 	}
 
-	recv_stream(out, response.get_payload_size(), yield);
-	return { false };
+	co_await recv_stream(out, response.get_payload_size());
+	co_return send_file_result{ false };
 }
 
-session::execute_result session::execute(const std::string &cmd, boost::asio::yield_context yield)
+std::future<session::execute_result> session::execute(const std::string &cmd)
 {
-	send_msg(types::EXECUTE, cmd, yield);
-	auto result = recv_err_or_ok(recv_header(yield), yield);
-	return { result.err, result.err_msg, result.msg };
+	co_await send_msg(types::EXECUTE, cmd);
+	auto result = co_await recv_err_or_ok(co_await recv_header());
+	co_return execute_result{ result.err, result.err_msg, result.msg };
 }
 
-session::quit_result session::quit(boost::asio::yield_context yield)
+std::future<session::quit_result> session::quit()
 {
-	return quit("", yield);
+	co_return co_await quit("");
 }
 
-session::quit_result session::quit(const std::string &msg, boost::asio::yield_context yield)
+std::future<session::quit_result> session::quit(const std::string &msg)
 {
-	send_msg(types::QUIT, msg, yield);
-	return recv_err_or_ok(recv_header(yield), yield);
+	co_await send_msg(types::QUIT, msg);
+	co_return co_await recv_err_or_ok(co_await recv_header());
 }
 
-session::err_or_empty_ok_result session::recv_err_or_empty_ok(const protocol::header &response, boost::asio::yield_context yield)
+std::future<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const protocol::header &response)
 {
 	switch (response.get_type())
 	{
@@ -103,23 +103,29 @@ session::err_or_empty_ok_result session::recv_err_or_empty_ok(const protocol::he
 		if (response.get_payload_size() != 0)
 			throw unexpected_message_error(*this, response, "no payload expected");
 
-		return { false };
+		co_return err_or_empty_ok_result{ false };
 
 	case types::ERR:
-		return { true, recv_msg(response.get_payload_size(), yield) };
+		co_return err_or_empty_ok_result{ true, co_await recv_msg(response.get_payload_size()) };
 	}
 
 	throw unexpected_message_error(*this, response);
 }
 
-session::err_or_ok_result session::recv_err_or_ok(const protocol::header &response, boost::asio::yield_context yield)
-{
+std::future<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &response)
+{	
 	switch (response.get_type())
 	{
 	case types::OK:
-		return { false, "", recv_msg(response.get_payload_size(), yield) };
+	{
+		auto msg = co_await recv_msg(response.get_payload_size());
+		co_return err_or_ok_result{ false, "", msg };
+	}
 	case types::ERR:
-		return { true, recv_msg(response.get_payload_size(), yield) };
+	{
+		auto msg = co_await recv_msg(response.get_payload_size());
+		co_return err_or_ok_result{ true, msg };
+	}
 	}
 
 	throw unexpected_message_error(*this, response);

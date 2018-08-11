@@ -1,16 +1,13 @@
-#include "command_client_websocket.h"
+#include "command_client.h"
 #include <cstdint>
 #include <boost/beast/core.hpp>
 #include <json_spirit/json_spirit.h>
 #include <utility>
-#include <type_traits>
 #include <stdexcept>
-#include <sstream>
-#include <map>
 using boost::asio::ip::tcp;
 using boost::asio::yield_context;
 using namespace boost::beast::websocket;
-using namespace cnc::server::websocket;
+using namespace cnc::server;
 using namespace cnc::common::server;
 using observer::protocol;
 using types = protocol::types;
@@ -22,22 +19,6 @@ types type_from_uint(std::uint64_t value)
 		return type;
 
 	throw std::out_of_range("invalid observer::protocol type");
-}
-
-std::map<std::underlying_type<types>::type, std::string> types_to_string()
-{
-	std::invoke_result<decltype(types_to_string)>::type result;
-	auto first = static_cast<std::underlying_type<types>::type>(types::FIRST_MEMBER_UNUSED);
-	auto last = static_cast<std::underlying_type<types>::type>(types::LAST_MEMBER_UNUSED);
-
-	for (auto i = first + 1; i < last; i++)
-	{
-		std::ostringstream ss;
-		ss << static_cast<types>(i);
-		result.emplace(i, ss.str());
-	}
-
-	return result;
 }
 
 potential_command_client::potential_command_client(tcp::socket socket)

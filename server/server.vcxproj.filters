@@ -21,7 +21,10 @@
     <ClCompile Include="client_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="command_client_websocket.cpp">
+    <ClCompile Include="command_client_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="command_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -29,10 +32,10 @@
     <ClInclude Include="client_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="command_client_websocket.h">
+    <ClInclude Include="command_client_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="command_client_manager.h">
+    <ClInclude Include="command_client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

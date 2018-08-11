@@ -5,7 +5,6 @@
 #include <fstream>
 using namespace cnc::server;
 using boost::asio::ip::tcp;
-using boost::asio::yield_context;
 using cnc::common::server::client::protocol;
 using types = protocol::types;
 
@@ -28,22 +27,17 @@ void client_manager::stop()
 		client.stop();
 }
 
-void client_manager::run()
+std::future<void> client_manager::run()
 {
 	if (m_running)
 		return;
 
-	boost::asio::spawn(m_context, std::bind(&client_manager::accept, this, std::placeholders::_1));
-}
-
-void client_manager::accept(yield_context yield)
-{
 	while (m_running)
 	{
 		try
 		{
 			tcp::socket socket(m_context);
-			m_acceptor.async_accept(socket, yield);
+			co_await m_acceptor.async_accept(socket, boost::asio::use_future);
 			auto &sess = m_potentials.emplace_back(std::move(socket));
 			auto iter = --m_potentials.end();
 			auto close_conn = sess.on_close.connect([this, iter]
@@ -55,14 +49,14 @@ void client_manager::accept(yield_context yield)
 				sess.close();
 			});
 
-			boost::asio::spawn(m_context, [this, &sess, close_conn, err_conn](auto yield)
+			auto task = [this, &sess, iter, close_conn, err_conn]() -> std::future<void>
 			{
-				sess.initialize(yield);
+				co_await sess.initialize();
 				for (auto & session : m_clients)
 				{
 					if (session.get_mac_addr() == sess.get_mac_addr())
 					{
-						sess.quit("mac already registered", yield);
+						co_await sess.quit("mac already registered");
 						return;
 					}
 				}
@@ -72,18 +66,22 @@ void client_manager::accept(yield_context yield)
 				err_conn.disconnect();
 
 				auto &client = m_clients.emplace_back(std::move(sess));
-				auto iter = --m_clients.end();
-				client.on_close.connect([this, iter]
+				m_potentials.erase(iter);
+
+				auto new_iter = --m_clients.end();
+				client.on_close.connect([this, new_iter]
 				{
-					m_clients.erase(iter);
+					m_clients.erase(new_iter);
 				});
 				client.on_error.connect([this, &client](auto ptr)
 				{
 					client.close();
+					client.stop();
+					on_error(ptr);
 				});
 
-				client.run(yield);
-			});
+				co_await client.run();
+			};
 		}
 		catch (...)
 		{
@@ -98,15 +96,15 @@ potential_client::potential_client(tcp::socket socket)
 
 }
 
-void potential_client::initialize(yield_context yield)
+std::future<void> potential_client::initialize()
 {
 	try
 	{
-		auto header = recv_header(yield);
+		auto header = co_await recv_header();
 		if (header.get_type() != types::HELLO)
 			throw unexpected_message_error(*this, header);
 
-		auto payload = recv_msg(header.get_payload_size(), yield);
+		auto payload = co_await recv_msg(header.get_payload_size());
 		m_hello_data = protocol::hello_data_from_string(payload);
 		m_initialized = true;		
 	}
@@ -135,24 +133,24 @@ client::client(potential_client session)
 
 }
 
-void client::run(yield_context yield)
+std::future<void> client::run()
 {
 	m_running = true;
 	while (m_running)
 	{
 		try
 		{
-			auto header = recv_header(yield);
+			auto header = co_await recv_header();
 			switch (header.get_type())
 			{
 			case types::RECV_FILE:
 			{
-				auto path = common::path_from_string(recv_msg(header.get_payload_size(), yield));
+				auto path = common::path_from_string(co_await recv_msg(header.get_payload_size()));
 				if (!std::filesystem::is_directory(path))
 				{
 					if (!std::filesystem::create_directories(path.parent_path()))
 					{
-						send_msg(types::ERR, "unable to create directories", yield);
+						co_await send_msg(types::ERR, "unable to create directories");
 						break;
 					}
 				}
@@ -160,33 +158,33 @@ void client::run(yield_context yield)
 				std::ofstream file(path.filename(), std::ios::out | std::ios::binary);
 				if (!file)
 				{
-					send_msg(types::ERR, "unable to create file", yield);
+					co_await send_msg(types::ERR, "unable to create file");
 					break;
 				}
 
-				auto blob_header = recv_header(yield);
+				auto blob_header = co_await recv_header();
 				if (blob_header.get_type() != types::BLOB)
 					throw unexpected_message_error(*this, blob_header);
 
-				recv_stream(file, header.get_payload_size(), yield);
+				co_await recv_stream(file, header.get_payload_size());
 				break;
 			}
 			case types::SEND_FILE:
 			{
-				auto path = common::path_from_string(recv_msg(header.get_payload_size(), yield));
+				auto path = common::path_from_string(co_await recv_msg(header.get_payload_size()));
 				std::ifstream file(path.native(), std::ios::in | std::ios::binary);
 				if (!file)
 				{
-					send_msg(types::ERR, "unable to open file", yield);
+					co_await send_msg(types::ERR, "unable to open file");
 					break;
 				}
 
-				send_stream(types::BLOB, file, std::filesystem::file_size(path), yield);
+				co_await send_stream(types::BLOB, file, std::filesystem::file_size(path));
 				break;
 			}
 			case types::QUIT:
 			{
-				auto msg = recv_msg(header.get_payload_size(), yield);
+				auto msg = co_await recv_msg(header.get_payload_size());
 				on_quit(msg);
 				close();
 				break;

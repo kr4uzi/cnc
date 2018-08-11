@@ -23,7 +23,7 @@ namespace cnc {
 
 		private:
 			bool m_valid = false;
-			const struct data {
+			struct data {
 				byte_type magic_byte = protocol::magic_byte;
 				typename protocol::types type;
 				size_type payload_size;
@@ -34,6 +34,39 @@ namespace cnc {
 		public:
 			static constexpr std::size_t get_size() { return size; }
 			using byte_array = std::array<unsigned char, size>;
+
+			// provide a default constructor (needed by std::future)
+			header()
+				: m_data{ 0x0, protocol::types::FIRST_MEMBER_UNUSED, 0 }
+			{
+
+			}
+
+			header(header &&rhs)
+				: header(std::cref(rhs))
+			{
+
+			}
+
+			header &operator=(header &&rhs)
+			{
+				return operator=(std::cref(rhs));
+			}
+
+			header(const header &rhs)
+				: m_valid(rhs.m_valid), m_data{ rhs.m_data.magic_byte, rhs.m_data.type, rhs.m_data.payload_size }
+			{
+
+			}
+
+			header &operator=(const header &rhs)
+			{
+				m_valid = rhs.m_valid;
+				m_data.magic_byte = rhs.m_data.magic_byte;
+				m_data.type = rhs.m_data.type;
+				m_data.payload_size = rhs.m_data.payload_size;
+				return *this;
+			}
 
 			header(const byte_array& src)
 				: m_data{ src[0], static_cast<typename protocol::types>(src[1]), *reinterpret_cast<const size_type *>(&src[2]) }

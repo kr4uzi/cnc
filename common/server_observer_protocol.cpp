@@ -92,3 +92,24 @@ protocol::logs protocol::logs_from_string(const std::string &str)
 	ia >> data;
 	return data;
 }
+
+const std::map<std::underlying_type<protocol::types>::type, std::string> &protocol::types_to_string()
+{
+	static bool initialized;
+	static std::map<std::underlying_type<protocol::types>::type, std::string> values;
+
+	if (initialized)
+		return values;
+
+	auto first = static_cast<std::underlying_type<types>::type>(types::FIRST_MEMBER_UNUSED);
+	auto last = static_cast<std::underlying_type<types>::type>(types::LAST_MEMBER_UNUSED);
+
+	for (auto i = first + 1; i < last; i++)
+	{
+		std::ostringstream ss;
+		ss << static_cast<types>(i);
+		values.emplace(i, ss.str());
+	}
+
+	return values;
+}

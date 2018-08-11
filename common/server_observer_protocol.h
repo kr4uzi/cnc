@@ -7,6 +7,8 @@
 #include <string>
 #include <ctime>
 #include <vector>
+#include <map>
+#include <type_traits>
 
 namespace cnc {
 	namespace common {
@@ -37,6 +39,8 @@ namespace cnc {
 
 						LAST_MEMBER_UNUSED
 					};
+
+					static const std::map<std::underlying_type<types>::type, std::string> &types_to_string();
 
 					static constexpr unsigned short tcp_port = 5001;
 					static constexpr std::uint8_t magic_byte = 0x2;

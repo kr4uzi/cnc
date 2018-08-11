@@ -33,9 +33,6 @@
     <ClCompile Include="serialize_network.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="header.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="server_observer_session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

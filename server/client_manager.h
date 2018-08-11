@@ -23,7 +23,7 @@ namespace cnc { namespace server {
 		const protocol::hello_data &get_hello_data() const;
 		const common::mac_addr &get_mac_addr() const;
 
-		void initialize(boost::asio::yield_context yield);
+		std::future<void> initialize();
 		using session::close;
 	};
 
@@ -39,7 +39,7 @@ namespace cnc { namespace server {
 
 		boost::signals2::signal<void(const std::string &)> on_quit;
 
-		void run(boost::asio::yield_context yield);
+		std::future<void> run();
 		void stop();
 	};
 
@@ -58,10 +58,7 @@ namespace cnc { namespace server {
 		client_manager(boost::asio::io_context &context);
 		~client_manager();
 
-		void run();
+		std::future<void> run();
 		void stop();
-
-	private:
-		void accept(boost::asio::yield_context yield);
 	};
 } }

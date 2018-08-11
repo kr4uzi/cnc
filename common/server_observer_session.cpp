@@ -6,7 +6,6 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <sstream>
 using namespace cnc::common::server::observer;
-using boost::asio::yield_context;
 using boost::asio::ip::tcp;
 using types = protocol::types;
 
@@ -16,7 +15,7 @@ session::session(tcp::socket socket)
 
 }
 
-session::err_or_empty_ok_result session::recv_err_or_empty_ok(const protocol::header &response, boost::asio::yield_context ctx)
+std::future<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const protocol::header &response)
 {
 	switch (response.get_type())
 	{
@@ -24,82 +23,89 @@ session::err_or_empty_ok_result session::recv_err_or_empty_ok(const protocol::he
 		if (response.get_payload_size() != 0)
 			throw unexpected_message_error(*this, response, "no payload expected");
 
-		return { false };
+		co_return err_or_empty_ok_result{ false };
 
 	case types::ERR:
-		return { true, recv_msg(response.get_payload_size(), ctx) };
+		co_return err_or_empty_ok_result{ true, co_await recv_msg(response.get_payload_size()) };
 	}
 
 	throw unexpected_message_error(*this, response);
 }
 
-session::err_or_ok_result session::recv_err_or_ok(const protocol::header &response, boost::asio::yield_context ctx)
+std::future<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &response)
 {
 	switch (response.get_type())
 	{
 	case types::OK:
-		return { false, "", recv_msg(response.get_payload_size(), ctx) };
+	{
+		auto msg = co_await recv_msg(response.get_payload_size());
+		co_return err_or_ok_result{ false, "", msg };
+	}
 	case types::ERR:
-		return { true, recv_msg(response.get_payload_size(), ctx) };
+	{
+		auto msg = co_await recv_msg(response.get_payload_size());
+		co_return err_or_ok_result{ true, msg };		
+	}
 	}
 
 	throw unexpected_message_error(*this, response);
 }
 
-session::observe_result session::observe(const cnc::common::mac_addr &mac, boost::asio::yield_context yield)
+std::future<session::observe_result> session::observe(const cnc::common::mac_addr &mac)
 {
-	send_msg(types::OBSERVE, to_string(mac), yield);
-	auto response = recv_header(yield);
+	co_await send_msg(types::OBSERVE, to_string(mac));
+	auto response = co_await recv_header();
 	switch (response.get_type())
 	{
 	case types::OK:
 		break;
 	case types::ERR:
-		return { true, recv_msg(response.get_payload_size(), yield) };
+		co_return observe_result{ true, co_await recv_msg(response.get_payload_size()) };
 	default:
 		throw unexpected_message_error(*this, response);
 	}
 
-	
-	return { false, "", protocol::logs_from_string(recv_msg(response.get_payload_size(), yield)) };
+	auto msg = co_await recv_msg(response.get_payload_size());
+	co_return observe_result{ false, "", protocol::logs_from_string(msg) };
 }
 
-session::hello_result session::hello(boost::asio::yield_context yield)
+std::future<session::hello_result> session::hello()
 {
-	send_msg(types::OBSERVE, yield);
-	auto response = recv_header(yield);
+	co_await send_msg(types::OBSERVE);
+	auto response = co_await recv_header();
 	switch (response.get_type())
 	{
 	case types::OK:
 		break;
 	case types::ERR:
-		return { true, recv_msg(response.get_payload_size(), yield) };
+		co_return hello_result{ true, co_await recv_msg(response.get_payload_size()) };
 	default:
 		throw unexpected_message_error(*this, response);
 	}
 
-	return { false, "", protocol::clients_from_string(recv_msg(response.get_payload_size(), yield)) };
+	auto msg = co_await recv_msg(response.get_payload_size());
+	co_return hello_result{ false, "", protocol::clients_from_string(msg) };
 }
 
-session::recv_file_result session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size, yield_context yield)
+std::future<session::recv_file_result> session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size)
 {
-	send_msg(types::RECV_FILE, to_string(path), yield);
-	auto result = recv_err_or_empty_ok(recv_header(yield), yield);
+	co_await send_msg(types::RECV_FILE, to_string(path));
+	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
 	if (result.err)
-		return { true, result.err_msg };
+		co_return recv_file_result{ true, result.err_msg };
 
-	send_stream(types::BLOB, in, size, yield);
-	return { false };
+	co_await send_stream(types::BLOB, in, size);
+	co_return recv_file_result{ false };
 }
 
-session::send_file_result session::send_file(const std::filesystem::path &path, std::ostream &out, yield_context yield)
+std::future<session::send_file_result> session::send_file(const std::filesystem::path &path, std::ostream &out)
 {
-	send_msg(types::SEND_FILE, to_string(path), yield);
-	auto result = recv_err_or_empty_ok(recv_header(yield), yield);
+	co_await send_msg(types::SEND_FILE, to_string(path));
+	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
 	if (result.err)
-		return { true, result.err_msg };
+		co_return send_file_result{ true, result.err_msg };
 
-	auto response = recv_header(yield);
+	auto response = co_await recv_header();
 	switch (response.get_type())
 	{
 	case types::BLOB:
@@ -108,29 +114,30 @@ session::send_file_result session::send_file(const std::filesystem::path &path, 
 		throw unexpected_message_error(*this, response);
 	}
 
-	recv_stream(out, response.get_payload_size(), yield);
-	return { false };
+	co_await recv_stream(out, response.get_payload_size());
+	co_return send_file_result{ false };
 }
 
-session::unobserve_result session::quit(boost::asio::yield_context yield)
+std::future<session::unobserve_result> session::quit()
 {
-	send_msg(types::QUIT, yield);
-	return recv_err_or_empty_ok(recv_header(yield), yield);
+	co_await send_msg(types::QUIT);
+	co_return co_await recv_err_or_empty_ok(co_await recv_header());
 }
 
-session::unobserve_result session::quit(const std::string &message, boost::asio::yield_context yield)
+std::future<session::unobserve_result> session::quit(const std::string &message)
 {
-	send_msg(types::QUIT, message, yield);
-	return recv_err_or_empty_ok(recv_header(yield), yield);
+	co_await send_msg(types::QUIT, message);
+	co_return co_await recv_err_or_empty_ok(co_await recv_header());
 }
 
-session::unobserve_result session::unobserve(const cnc::common::mac_addr &mac, boost::asio::yield_context yield)
+std::future<session::unobserve_result> session::unobserve(const cnc::common::mac_addr &mac)
 {
-	send_msg(types::UNOBSERVE, to_string(mac), yield);
-	return recv_err_or_empty_ok(recv_header(yield), yield);
+	co_await send_msg(types::UNOBSERVE, to_string(mac));
+	co_return co_await recv_err_or_empty_ok(co_await recv_header());
 }
-session::connect_result session::connect(const protocol::connect_data &data, boost::asio::yield_context yield)
+
+std::future<session::connect_result> session::connect(const protocol::connect_data &data)
 {
-	send_msg(types::CONNECT, protocol::to_string(data), yield);
-	return recv_err_or_empty_ok(recv_header(yield), yield);
+	co_await send_msg(types::CONNECT, protocol::to_string(data));
+	co_return co_await recv_err_or_empty_ok(co_await recv_header());
 }
