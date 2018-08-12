@@ -1,11 +1,11 @@
-#include "client_protocol.h"
+#include "observer_client_protocol.h"
 #include "serialize_tuple.h"
 #include "serialize_filesystem.h"
 #include <boost/serialization/vector.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <sstream>
-using namespace cnc::common::client;
+using namespace cnc::common::observer::client;
 
 std::string protocol::to_string(const directory_view &view)
 {

@@ -1,7 +1,6 @@
 #pragma once
 #include <common/server_client_session.h>
 #include <list>
-#include <exception>
 
 namespace cnc { namespace server {
 	class potential_client : public common::server::client::session
@@ -12,10 +11,6 @@ namespace cnc { namespace server {
 		protocol::hello_data m_hello_data;
 
 	public:
-		boost::signals2::signal<void(std::exception_ptr)> on_error;
-		using session::on_close;
-
-	public:
 		potential_client(boost::asio::ip::tcp::socket socket);
 		potential_client(potential_client &&) = default;
 		potential_client &operator=(potential_client &&) = default;
@@ -23,7 +18,7 @@ namespace cnc { namespace server {
 		const protocol::hello_data &get_hello_data() const;
 		const common::mac_addr &get_mac_addr() const;
 
-		std::future<void> initialize();
+		common::task<void> initialize();
 		using session::close;
 	};
 
@@ -37,9 +32,7 @@ namespace cnc { namespace server {
 		client(client &&) = default;
 		client &operator=(client &&) = default;
 
-		boost::signals2::signal<void(const std::string &)> on_quit;
-
-		std::future<void> run();
+		common::task<void> run();
 		void stop();
 	};
 
@@ -52,13 +45,10 @@ namespace cnc { namespace server {
 		std::list<client> m_clients;
 
 	public:
-		boost::signals2::signal<void(std::exception_ptr)> on_error;
-
-	public:
 		client_manager(boost::asio::io_context &context);
 		~client_manager();
 
-		std::future<void> run();
+		common::task<void> run();
 		void stop();
 	};
 } }

@@ -3,6 +3,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_context.hpp>
 #include <list>
+#include <vector>
 
 namespace cnc {
 	namespace server {
@@ -17,13 +18,8 @@ namespace cnc {
 		public:
 			command_client_manager(boost::asio::io_context &context);
 
-			void run(boost::asio::yield_context yield);
-			void stop(boost::asio::yield_context yield);
-
-			boost::signals2::signal<void(std::exception_ptr)> on_error;
-
-		private:
-			void accept(boost::asio::yield_context yield);
+			common::task<void> run();
+			void stop();
 		};
 	}
 }

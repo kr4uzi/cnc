@@ -18,12 +18,6 @@
     <ClCompile Include="config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="client_session.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="client_protocol.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="basic_session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -45,15 +39,15 @@
     <ClCompile Include="server_client_session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="observer_client_protocol.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="observer_client_session.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="client_protocol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="client_session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="serialize_tuple.h">
@@ -84,6 +78,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="server_client_session.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="task.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="async_net.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="observer_client_protocol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="observer_client_session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

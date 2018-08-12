@@ -29,39 +29,39 @@ namespace cnc {
 						protocol::clients clients;
 					};
 					[[nodiscard]]
-					std::future<hello_result> hello();
+					task<hello_result> hello();
 
 					using recv_file_result = err_or_empty_ok_result;
 					[[nodiscard]]
-					std::future<recv_file_result> recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size);
+					task<recv_file_result> recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size);
 					using send_file_result = err_or_empty_ok_result;
 					[[nodiscard]]
-					std::future<send_file_result> send_file(const std::filesystem::path &path, std::ostream &out);
+					task<send_file_result> send_file(const std::filesystem::path &path, std::ostream &out);
 
 					struct observe_result : err_or_empty_ok_result
 					{
 						protocol::logs logs;
 					};
 					[[nodiscard]]
-					std::future<observe_result> observe(const mac_addr &data);
+					task<observe_result> observe(const mac_addr &data);
 					using unobserve_result = err_or_empty_ok_result;
 					[[nodiscard]]
-					std::future<unobserve_result> unobserve(const mac_addr &mac);
+					task<unobserve_result> unobserve(const mac_addr &mac);
 
 					using connect_result = err_or_empty_ok_result;
 					[[nodiscard]]
-					std::future<connect_result> connect(const protocol::connect_data &data);
+					task<connect_result> connect(const protocol::connect_data &data);
 
 					using quit_result = err_or_empty_ok_result;
 					[[nodiscard]]
-					std::future<quit_result> quit(const std::string &message);
+					task<quit_result> quit(const std::string &message);
 					[[nodiscard]]
-					std::future<quit_result> quit();
+					task<quit_result> quit();
 
 					[[nodiscard]]
-					std::future<err_or_empty_ok_result> recv_err_or_empty_ok(const protocol::header &header);
+					task<err_or_empty_ok_result> recv_err_or_empty_ok(const protocol::header &header);
 					[[nodiscard]]
-					std::future<err_or_ok_result> recv_err_or_ok(const protocol::header &header);
+					task<err_or_ok_result> recv_err_or_ok(const protocol::header &header);
 				};
 			}
 		}

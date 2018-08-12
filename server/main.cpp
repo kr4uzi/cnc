@@ -10,14 +10,17 @@ int main()
 	client_manager client_mgr{ context };
 	command_client_manager command_mgr{ context };
 	boost::asio::signal_set signals{ context };
-	signals.async_wait([&](auto &err, auto signal)
+
+	auto client_task = client_mgr.run();
+	auto command_task = command_mgr.run();
+	signals.async_wait([&](auto error, auto signal)
 	{
+		command_mgr.stop();
+		command_task.wait();
+
 		client_mgr.stop();
-		boost::asio::spawn(context, std::bind(&command_client_manager::stop, std::ref(command_mgr), std::placeholders::_1));
+		client_task.wait();
 	});
-
-	client_mgr.run();
-	boost::asio::spawn(context, std::bind(&command_client_manager::run, std::ref(command_mgr), std::placeholders::_1));
-
+	
 	context.run();
 }

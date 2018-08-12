@@ -1,38 +1,48 @@
 #pragma once
-#include "mac_addr.h"
+#include "observer_client_protocol.h"
 #include "basic_session.h"
-#include "server_client_protocol.h"
-#include <filesystem>
+#include <utility>
 
 namespace cnc {
 	namespace common {
-		namespace server {
+		namespace observer {
 			namespace client {
 				class session : public basic_session<protocol>
 				{
 				public:
 					session(boost::asio::ip::tcp::socket socket);
-					session(session &&) = default;
 					session &operator=(session &&) = default;
+					session(session &&) = default;
 
-					struct [[nodiscard]] err_or_empty_ok_result
+					struct[[nodiscard]] err_or_empty_ok_result
 					{
 						bool err;
 						std::string err_msg;
 					};
 
-					struct [[nodiscard]] err_or_ok_result : err_or_empty_ok_result
+					struct[[nodiscard]] err_or_ok_result : err_or_empty_ok_result
 					{
 						std::string msg;
 					};
 
-					using hello_result = err_or_empty_ok_result;
+					using hello_result = err_or_ok_result;
 					[[nodiscard]]
-					task<hello_result> hello(const protocol::hello_data &data);
+					task<hello_result> hello();
+					[[nodiscard]]
+					task<hello_result> hello(const std::string &msg);
 
-					using connect_result = err_or_empty_ok_result;
+					using create_directory_result = err_or_empty_ok_result;
 					[[nodiscard]]
-					task<connect_result> connect(const protocol::connect_data &data);
+					task<create_directory_result> create_directory(const std::filesystem::path &path);
+
+					struct list_directory_result
+					{
+						bool err;
+						std::string err_msg;
+						protocol::directory_view view;
+					};
+					[[nodiscard]]
+					task<list_directory_result> list_directory(const std::filesystem::path &path);
 
 					using recv_file_result = err_or_empty_ok_result;
 					[[nodiscard]]
@@ -41,7 +51,14 @@ namespace cnc {
 					[[nodiscard]]
 					task<send_file_result> send_file(const std::filesystem::path &path, std::ostream &out);
 
-					using quit_result = err_or_empty_ok_result;
+					struct execute_result : err_or_empty_ok_result
+					{
+						std::string result;
+					};
+					[[nodiscard]]
+					task<execute_result> execute(const std::string &cmd);
+
+					using quit_result = err_or_ok_result;
 					[[nodiscard]]
 					task<quit_result> quit();
 					[[nodiscard]]

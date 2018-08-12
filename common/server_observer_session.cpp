@@ -5,6 +5,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <sstream>
+using namespace cnc::common;
 using namespace cnc::common::server::observer;
 using boost::asio::ip::tcp;
 using types = protocol::types;
@@ -15,7 +16,7 @@ session::session(tcp::socket socket)
 
 }
 
-std::future<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const protocol::header &response)
+task<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const protocol::header &response)
 {
 	switch (response.get_type())
 	{
@@ -32,7 +33,7 @@ std::future<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const
 	throw unexpected_message_error(*this, response);
 }
 
-std::future<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &response)
+task<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &response)
 {
 	switch (response.get_type())
 	{
@@ -51,7 +52,7 @@ std::future<session::err_or_ok_result> session::recv_err_or_ok(const protocol::h
 	throw unexpected_message_error(*this, response);
 }
 
-std::future<session::observe_result> session::observe(const cnc::common::mac_addr &mac)
+task<session::observe_result> session::observe(const cnc::common::mac_addr &mac)
 {
 	co_await send_msg(types::OBSERVE, to_string(mac));
 	auto response = co_await recv_header();
@@ -69,7 +70,7 @@ std::future<session::observe_result> session::observe(const cnc::common::mac_add
 	co_return observe_result{ false, "", protocol::logs_from_string(msg) };
 }
 
-std::future<session::hello_result> session::hello()
+task<session::hello_result> session::hello()
 {
 	co_await send_msg(types::OBSERVE);
 	auto response = co_await recv_header();
@@ -87,7 +88,7 @@ std::future<session::hello_result> session::hello()
 	co_return hello_result{ false, "", protocol::clients_from_string(msg) };
 }
 
-std::future<session::recv_file_result> session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size)
+task<session::recv_file_result> session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size)
 {
 	co_await send_msg(types::RECV_FILE, to_string(path));
 	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
@@ -98,7 +99,7 @@ std::future<session::recv_file_result> session::recv_file(const std::filesystem:
 	co_return recv_file_result{ false };
 }
 
-std::future<session::send_file_result> session::send_file(const std::filesystem::path &path, std::ostream &out)
+task<session::send_file_result> session::send_file(const std::filesystem::path &path, std::ostream &out)
 {
 	co_await send_msg(types::SEND_FILE, to_string(path));
 	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
@@ -118,25 +119,25 @@ std::future<session::send_file_result> session::send_file(const std::filesystem:
 	co_return send_file_result{ false };
 }
 
-std::future<session::unobserve_result> session::quit()
+task<session::unobserve_result> session::quit()
 {
 	co_await send_msg(types::QUIT);
 	co_return co_await recv_err_or_empty_ok(co_await recv_header());
 }
 
-std::future<session::unobserve_result> session::quit(const std::string &message)
+task<session::unobserve_result> session::quit(const std::string &message)
 {
 	co_await send_msg(types::QUIT, message);
 	co_return co_await recv_err_or_empty_ok(co_await recv_header());
 }
 
-std::future<session::unobserve_result> session::unobserve(const cnc::common::mac_addr &mac)
+task<session::unobserve_result> session::unobserve(const cnc::common::mac_addr &mac)
 {
 	co_await send_msg(types::UNOBSERVE, to_string(mac));
 	co_return co_await recv_err_or_empty_ok(co_await recv_header());
 }
 
-std::future<session::connect_result> session::connect(const protocol::connect_data &data)
+task<session::connect_result> session::connect(const protocol::connect_data &data)
 {
 	co_await send_msg(types::CONNECT, protocol::to_string(data));
 	co_return co_await recv_err_or_empty_ok(co_await recv_header());

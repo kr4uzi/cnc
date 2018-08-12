@@ -2,6 +2,7 @@
 #include "serialize_network.h"
 #include "serialize_filesystem.h"
 using boost::asio::ip::tcp;
+using namespace cnc::common;
 using namespace cnc::common::server::client;
 using types = protocol::types;
 
@@ -11,7 +12,7 @@ session::session(tcp::socket socket)
 
 }
 
-std::future<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const protocol::header &response)
+task<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const protocol::header &response)
 {
 	switch (response.get_type())
 	{
@@ -28,7 +29,7 @@ std::future<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const
 	throw unexpected_message_error(*this, response);
 }
 
-std::future<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &response)
+task<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &response)
 {
 	switch (response.get_type())
 	{
@@ -47,19 +48,19 @@ std::future<session::err_or_ok_result> session::recv_err_or_ok(const protocol::h
 	throw unexpected_message_error(*this, response);
 }
 
-std::future<session::hello_result> session::hello(const protocol::hello_data &data)
+task<session::hello_result> session::hello(const protocol::hello_data &data)
 {
 	co_await send_msg(types::HELLO, protocol::to_string(data));
 	co_return co_await recv_err_or_empty_ok(co_await recv_header());
 }
 
-std::future<session::connect_result> session::connect(const protocol::connect_data &data)
+task<session::connect_result> session::connect(const protocol::connect_data &data)
 {
 	co_await send_msg(types::CONNECT, protocol::to_string(data));
 	co_return co_await recv_err_or_empty_ok(co_await recv_header());
 }
 
-std::future<session::recv_file_result> session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size)
+task<session::recv_file_result> session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size)
 {
 	co_await send_msg(types::RECV_FILE, to_string(path));
 	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
@@ -70,7 +71,7 @@ std::future<session::recv_file_result> session::recv_file(const std::filesystem:
 	co_return recv_file_result{ false };
 }
 
-std::future<session::send_file_result> session::send_file(const std::filesystem::path &path, std::ostream &out)
+task<session::send_file_result> session::send_file(const std::filesystem::path &path, std::ostream &out)
 {
 	co_await send_msg(types::SEND_FILE, to_string(path));
 	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
@@ -90,12 +91,12 @@ std::future<session::send_file_result> session::send_file(const std::filesystem:
 	co_return send_file_result{ false };
 }
 
-std::future<session::quit_result> session::quit()
+task<session::quit_result> session::quit()
 {
 	co_return co_await quit("");
 }
 
-std::future<session::quit_result> session::quit(const std::string &msg)
+task<session::quit_result> session::quit(const std::string &msg)
 {
 	co_await send_msg(types::QUIT, msg);
 	co_return co_await recv_err_or_empty_ok(co_await recv_header());

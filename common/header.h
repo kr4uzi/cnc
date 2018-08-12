@@ -35,7 +35,7 @@ namespace cnc {
 			static constexpr std::size_t get_size() { return size; }
 			using byte_array = std::array<unsigned char, size>;
 
-			// provide a default constructor (needed by std::future)
+			// provide a default constructor (needed by task<T>)
 			header()
 				: m_data{ 0x0, protocol::types::FIRST_MEMBER_UNUSED, 0 }
 			{

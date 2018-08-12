@@ -1,11 +1,8 @@
 #pragma once
-#include <boost/asio/spawn.hpp>
-#include <boost/beast/websocket/stream.hpp>
-#include <boost/signals2/signal.hpp>
-#include <json_spirit/value.h>
-#include <exception>
-#include <stdexcept>
+#include "../common/task.h"
 #include "../common/server_observer_protocol.h"
+#include <boost/beast/websocket/stream.hpp>
+#include <json_spirit/value.h>
 
 namespace cnc {
 	namespace server {
@@ -56,14 +53,14 @@ namespace cnc {
 			potential_command_client &operator=(potential_command_client &&) = default;
 			~potential_command_client();
 
-			void initialize(boost::asio::yield_context yield);
-			void close(boost::beast::websocket::close_code reason, boost::asio::yield_context yield);
-
-			boost::signals2::signal<void(std::exception_ptr)> on_error;
-			boost::signals2::signal<void()> on_close;
+			[[nodiscard]]
+			common::task<void> initialize();
+			[[nodiscard]]
+			common::task<void> close(boost::beast::websocket::close_code reason);
 
 		protected:
-			websocket_message get_message(boost::asio::yield_context yield);
+			[[nodiscard]]
+			common::task<websocket_message> recv_msg();
 		};
 
 		class command_client : public potential_command_client
@@ -73,7 +70,8 @@ namespace cnc {
 		public:
 			command_client(potential_command_client client);
 
-			void run(boost::asio::yield_context yield);
+			[[nodiscard]]
+			common::task<void> run();
 			void stop();
 		};
 	}
