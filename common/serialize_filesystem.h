@@ -1,4 +1,5 @@
 #pragma once
+#include "default_deserialize.h"
 #include <string>
 #include <filesystem>
 #include <type_traits>
@@ -46,7 +47,9 @@ namespace boost {
 
 namespace cnc {
 	namespace common {
-		std::string to_string(const std::filesystem::path &path);
-		std::filesystem::path path_from_string(const std::string &str);
+		std::string serialize(const std::filesystem::path &path);
+
+		template<>
+		std::filesystem::path deserialize<std::filesystem::path>(const std::string &str);
 	}
 }

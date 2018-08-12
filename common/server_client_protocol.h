@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "mac_addr.h"
+#include "default_deserialize.h"
 #include <ostream>
 #include <boost/asio/ip/address.hpp>
 #include <boost/serialization/access.hpp>
@@ -49,9 +50,6 @@ namespace cnc {
 						}
 					};
 
-					static std::string to_string(const connect_data &req);
-					static connect_data connect_data_from_string(const std::string &str);
-
 					struct hello_data
 					{
 						mac_addr mac;
@@ -64,9 +62,6 @@ namespace cnc {
 							ar & mac;
 						}
 					};
-
-					static std::string to_string(const hello_data &entry);
-					static hello_data hello_data_from_string(const std::string &str);
 				};
 
 				template<class CharT, class Traits>
@@ -90,5 +85,14 @@ namespace cnc {
 				}
 			}
 		}
+
+		std::string serialize(const server::client::protocol::connect_data &req);
+
+		template<>
+		server::client::protocol::connect_data deserialize<server::client::protocol::connect_data>(const std::string &str);
+
+		std::string serialize(const server::client::protocol::hello_data &entry);
+		template<>
+		server::client::protocol::hello_data deserialize<server::client::protocol::hello_data>(const std::string &str);
 	}
 }

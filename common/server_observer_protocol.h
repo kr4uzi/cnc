@@ -1,4 +1,5 @@
 #pragma once
+#include "default_deserialize.h"
 #include "server_client_protocol.h"
 #include "header.h"
 #include "mac_addr.h"
@@ -65,9 +66,6 @@ namespace cnc {
 						}
 					};
 
-					static std::string to_string(const log &log);
-					static log log_from_string(const std::string &str);
-
 					struct connect_data
 					{
 						mac_addr target_mac;
@@ -85,9 +83,6 @@ namespace cnc {
 						}
 					};
 
-					static std::string to_string(const connect_data &log);
-					static connect_data connect_data_from_string(const std::string &str);
-
 					struct client_data
 					{
 						client::protocol::hello_data hello_data;
@@ -103,16 +98,8 @@ namespace cnc {
 						}
 					};
 
-					static std::string to_string(const client_data &entry);
-					static client_data client_data_from_string(const std::string &str);
-
 					using clients = std::vector<client_data>;
-					static std::string to_string(const clients &clients);
-					static clients clients_from_string(const std::string &str);
-
 					using logs = std::vector<log>;
-					static std::string to_string(const logs &logs);
-					static logs logs_from_string(const std::string &str);
 				};
 
 				template<class CharT, class Traits>
@@ -138,5 +125,25 @@ namespace cnc {
 				}
 			}
 		}
+
+		std::string serialize(const server::observer::protocol::log &log);
+		template<>
+		server::observer::protocol::log deserialize<server::observer::protocol::log>(const std::string &str);
+
+		std::string serialize(const server::observer::protocol::connect_data &data);
+		template<>
+		server::observer::protocol::connect_data deserialize<server::observer::protocol::connect_data>(const std::string &str);
+
+		std::string serialize(const server::observer::protocol::client_data &data);
+		template<>
+		server::observer::protocol::client_data deserialize<server::observer::protocol::client_data>(const std::string &str);
+
+		std::string serialize(const server::observer::protocol::clients &clients);
+		template<>
+		server::observer::protocol::clients deserialize<server::observer::protocol::clients>(const std::string &str);
+
+		std::string serialize(const server::observer::protocol::logs &logs);
+		template<>
+		server::observer::protocol::logs deserialize<server::observer::protocol::logs>(const std::string &str);
 	}
 }

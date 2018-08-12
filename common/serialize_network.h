@@ -1,5 +1,6 @@
 #pragma once
 #include "mac_addr.h"
+#include "default_deserialize.h"
 #include <array>
 #include <string>
 #include <boost/asio/ip/address.hpp>
@@ -26,7 +27,9 @@ namespace boost {
 
 namespace cnc {
 	namespace common {
-		std::string to_string(const mac_addr &addr);
-		mac_addr mac_addr_from_string(const std::string &str);
+		std::string serialize(const mac_addr &addr);
+
+		template<>
+		mac_addr deserialize<mac_addr>(const std::string &str);
 	}
 }

@@ -6,9 +6,10 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <sstream>
-using namespace cnc::common::server::observer;
+using namespace cnc;
+using protocol = common::server::observer::protocol;
 
-std::string protocol::to_string(const client_data &entry)
+std::string common::serialize(const protocol::client_data &entry)
 {
 	std::ostringstream ss;
 	boost::archive::text_oarchive oa{ ss };
@@ -16,16 +17,17 @@ std::string protocol::to_string(const client_data &entry)
 	return ss.str();
 }
 
-protocol::client_data protocol::client_data_from_string(const std::string &msg)
+template<>
+protocol::client_data common::deserialize<protocol::client_data>(const std::string &msg)
 {
 	std::istringstream ss{ msg };
 	boost::archive::text_iarchive ia{ ss };
-	client_data entry;
+	protocol::client_data entry;
 	ia >> entry;
 	return entry;
 }
 
-std::string protocol::to_string(const log &data)
+std::string common::serialize(const protocol::log &data)
 {
 	std::ostringstream ss;
 	boost::archive::text_oarchive oa{ ss };
@@ -33,16 +35,17 @@ std::string protocol::to_string(const log &data)
 	return ss.str();
 }
 
-protocol::log protocol::log_from_string(const std::string &msg)
+template<>
+protocol::log common::deserialize<protocol::log>(const std::string &msg)
 {
 	std::istringstream ss{ msg };
 	boost::archive::text_iarchive ia{ ss };
-	log data;
+	protocol::log data;
 	ia >> data;
 	return data;
 }
 
-std::string protocol::to_string(const connect_data &data)
+std::string common::serialize(const protocol::connect_data &data)
 {
 	std::ostringstream ss;
 	boost::archive::text_oarchive oa{ ss };
@@ -50,16 +53,17 @@ std::string protocol::to_string(const connect_data &data)
 	return ss.str();
 }
 
-protocol::connect_data protocol::connect_data_from_string(const std::string &msg)
+template<>
+protocol::connect_data common::deserialize<protocol::connect_data>(const std::string &msg)
 {
 	std::istringstream ss{ msg };
 	boost::archive::text_iarchive ia{ ss };
-	connect_data data;
+	protocol::connect_data data;
 	ia >> data;
 	return data;
 }
 
-std::string protocol::to_string(const clients &clients)
+std::string common::serialize(const protocol::clients &clients)
 {
 	std::ostringstream ss;
 	boost::archive::text_oarchive oa{ ss };
@@ -67,16 +71,17 @@ std::string protocol::to_string(const clients &clients)
 	return ss.str();
 }
 
-protocol::clients protocol::clients_from_string(const std::string &str)
+template<>
+protocol::clients common::deserialize<protocol::clients>(const std::string &str)
 {
 	std::istringstream ss{ str };
 	boost::archive::text_iarchive ia{ ss };
-	clients data;
+	protocol::clients data;
 	ia >> data;
 	return data;
 }
 
-std::string protocol::to_string(const logs &logs)
+std::string common::serialize(const protocol::logs &logs)
 {
 	std::ostringstream ss;
 	boost::archive::text_oarchive oa{ ss };
@@ -84,11 +89,12 @@ std::string protocol::to_string(const logs &logs)
 	return ss.str();
 }
 
-protocol::logs protocol::logs_from_string(const std::string &str)
+template<>
+protocol::logs common::deserialize<protocol::logs>(const std::string &str)
 {
 	std::istringstream ss{ str };
 	boost::archive::text_iarchive ia{ ss };
-	logs data;
+	protocol::logs data;
 	ia >> data;
 	return data;
 }

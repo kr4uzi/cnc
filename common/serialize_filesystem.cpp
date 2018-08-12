@@ -3,7 +3,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <sstream>
 
-std::string cnc::common::to_string(const std::filesystem::path &path)
+std::string cnc::common::serialize(const std::filesystem::path &path)
 {
 	std::ostringstream ss;
 	boost::archive::text_oarchive oa{ ss };
@@ -11,7 +11,8 @@ std::string cnc::common::to_string(const std::filesystem::path &path)
 	return ss.str();
 }
 
-std::filesystem::path cnc::common::path_from_string(const std::string &msg)
+template<>
+std::filesystem::path cnc::common::deserialize<std::filesystem::path>(const std::string &msg)
 {
 	std::istringstream ss{ msg };
 	boost::archive::text_iarchive ia{ ss };

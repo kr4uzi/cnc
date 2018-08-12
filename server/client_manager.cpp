@@ -81,7 +81,7 @@ std::future<void> client_manager::run()
 				}
 				catch (...)
 				{
-					BOOST_LOG_TRIVIAL(error) << "[ClientMgr][" << mac_addr_to_readable_str(client.get_mac_addr()) << "]: " << 
+				
 				}
 
 				// the client has to be erased either way (error or not)
@@ -113,7 +113,7 @@ std::future<void> potential_client::initialize()
 		throw unexpected_message_error(*this, header);
 
 	auto payload = co_await recv_msg(header.get_payload_size());
-	m_hello_data = protocol::hello_data_from_string(payload);
+	m_hello_data = deserialize<protocol::hello_data>(payload);
 	m_initialized = true;
 }
 
@@ -146,7 +146,7 @@ std::future<void> client::run()
 		{
 		case types::RECV_FILE:
 		{
-			auto path = common::path_from_string(co_await recv_msg(header.get_payload_size()));
+			auto path = deserialize<std::filesystem::path>(co_await recv_msg(header.get_payload_size()));
 			if (!std::filesystem::is_directory(path))
 			{
 				if (!std::filesystem::create_directories(path.parent_path()))
@@ -172,7 +172,7 @@ std::future<void> client::run()
 		}
 		case types::SEND_FILE:
 		{
-			auto path = common::path_from_string(co_await recv_msg(header.get_payload_size()));
+			auto path = deserialize<std::filesystem::path>(co_await recv_msg(header.get_payload_size()));
 			std::ifstream file(path.native(), std::ios::in | std::ios::binary);
 			if (!file)
 			{

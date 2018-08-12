@@ -67,7 +67,7 @@ task<session::observe_result> session::observe(const cnc::common::mac_addr &mac)
 	}
 
 	auto msg = co_await recv_msg(response.get_payload_size());
-	co_return observe_result{ false, "", protocol::logs_from_string(msg) };
+	co_return observe_result{ false, "", deserialize<protocol::logs>(msg) };
 }
 
 task<session::hello_result> session::hello()
@@ -85,12 +85,12 @@ task<session::hello_result> session::hello()
 	}
 
 	auto msg = co_await recv_msg(response.get_payload_size());
-	co_return hello_result{ false, "", protocol::clients_from_string(msg) };
+	co_return hello_result{ false, "", deserialize<protocol::clients>(msg) };
 }
 
 task<session::recv_file_result> session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size)
 {
-	co_await send_msg(types::RECV_FILE, to_string(path));
+	co_await send_msg(types::RECV_FILE, serialize(path));
 	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
 	if (result.err)
 		co_return recv_file_result{ true, result.err_msg };
@@ -101,7 +101,7 @@ task<session::recv_file_result> session::recv_file(const std::filesystem::path &
 
 task<session::send_file_result> session::send_file(const std::filesystem::path &path, std::ostream &out)
 {
-	co_await send_msg(types::SEND_FILE, to_string(path));
+	co_await send_msg(types::SEND_FILE, serialize(path));
 	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
 	if (result.err)
 		co_return send_file_result{ true, result.err_msg };
@@ -139,6 +139,6 @@ task<session::unobserve_result> session::unobserve(const cnc::common::mac_addr &
 
 task<session::connect_result> session::connect(const protocol::connect_data &data)
 {
-	co_await send_msg(types::CONNECT, protocol::to_string(data));
+	co_await send_msg(types::CONNECT, serialize(data));
 	co_return co_await recv_err_or_empty_ok(co_await recv_header());
 }

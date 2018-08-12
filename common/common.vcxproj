@@ -138,6 +138,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="config.cpp" />
+    <ClCompile Include="mac_addr.cpp" />
     <ClCompile Include="serialize_network.cpp" />
     <ClCompile Include="serialize_filesystem.cpp" />
     <ClCompile Include="server_client_protocol.cpp" />
@@ -150,6 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="async_net.h" />
+    <ClInclude Include="default_deserialize.h" />
     <ClInclude Include="observer_client_session.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="header.h" />

@@ -3,8 +3,9 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <sstream>
+using namespace cnc;
 
-std::string cnc::common::to_string(const cnc::common::mac_addr &addr)
+std::string common::serialize(const common::mac_addr &addr)
 {
 	std::ostringstream ss;
 	boost::archive::text_oarchive oa{ ss };
@@ -12,7 +13,8 @@ std::string cnc::common::to_string(const cnc::common::mac_addr &addr)
 	return ss.str();
 }
 
-cnc::common::mac_addr cnc::common::mac_addr_from_string(const std::string &str)
+template<>
+common::mac_addr common::deserialize<common::mac_addr>(const std::string &str)
 {
 	std::istringstream ss{ str };
 	boost::archive::text_iarchive ia{ ss };

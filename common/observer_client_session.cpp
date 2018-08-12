@@ -48,7 +48,7 @@ task<session::list_directory_result> session::list_directory(const std::filesyst
 
 task<session::recv_file_result> session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size)
 {
-	co_await send_msg(types::RECV_FILE, to_string(path));
+	co_await send_msg(types::RECV_FILE, serialize(path));
 	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
 	if (result.err)
 		co_return recv_file_result{ true, result.err_msg };
@@ -59,7 +59,7 @@ task<session::recv_file_result> session::recv_file(const std::filesystem::path &
 
 task<session::send_file_result> session::send_file(const std::filesystem::path &path, std::ostream &out)
 {
-	co_await send_msg(types::SEND_FILE, to_string(path));
+	co_await send_msg(types::SEND_FILE, serialize(path));
 	auto result = co_await recv_err_or_empty_ok(co_await recv_header());
 	if (result.err)
 		co_return send_file_result{ true, result.err_msg };

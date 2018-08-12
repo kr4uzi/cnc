@@ -45,6 +45,9 @@
     <ClCompile Include="observer_client_session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mac_addr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h">
@@ -90,6 +93,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="observer_client_session.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="default_deserialize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
