@@ -5,9 +5,10 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <sstream>
+using namespace cnc;
 using namespace cnc::common::observer::client;
 
-std::string protocol::to_string(const directory_view &view)
+std::string common::serialize(const protocol::directory_view &view)
 {
 	std::ostringstream ss;
 	boost::archive::text_oarchive oa{ ss };
@@ -15,11 +16,12 @@ std::string protocol::to_string(const directory_view &view)
 	return ss.str();
 }
 
-protocol::directory_view protocol::directory_view_from_string(const std::string &msg)
+template<>
+protocol::directory_view common::deserialize<protocol::directory_view>(const std::string &msg)
 {
 	std::istringstream ss{ msg };
 	boost::archive::text_iarchive ia{ ss };
-	directory_view view;
+	protocol::directory_view view;
 	ia >> view;
 	return view;
 }

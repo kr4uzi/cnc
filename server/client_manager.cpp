@@ -1,19 +1,22 @@
 #include "client_manager.h"
-#include "../common/serialize_filesystem.h"
-#include <boost/log/trivial.hpp>
-#include <filesystem>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
+#include "client.h"
+#include <common/server_client_protocol.h>
+#include <iostream>
+#include <pybind11/embed.h>
 using namespace cnc::server;
 using namespace cnc::common;
+namespace py = pybind11;
 using boost::asio::ip::tcp;
 using cnc::common::server::client::protocol;
 using types = protocol::types;
 
+namespace cnc { namespace server {
+
+} }
+
+singleton<client_manager> *singleton<client_manager>::m_instance;
 client_manager::client_manager(boost::asio::io_context &context)
-	: m_context(context),
-	m_acceptor(context, tcp::endpoint(tcp::v4(), protocol::tcp_port))
+	: m_context(context), m_acceptor(context, tcp::endpoint(tcp::v4(), protocol::tcp_port))
 {
 
 }
@@ -25,28 +28,20 @@ client_manager::~client_manager()
 
 void client_manager::stop()
 {
+	if (!m_running)
+		return;
+
 	m_running = false;
 	for (auto &client : m_clients)
 		client.stop();
 }
 
-std::string mac_addr_to_readable_str(const mac_addr &addr)
-{
-	std::string str;
-	for (auto & byte : addr)
-	{
-		std::ostringstream ss;
-		ss << std::hex << std::setw(2) << std::setfill('0') << byte;
-		str += ss.str();
-	}
-
-	return str;
-}
-
 std::future<void> client_manager::run()
 {
+	// this should throw because the the caller might assume that the returned task is shared with a potential
+	// previous "run"
 	if (m_running)
-		return;
+		throw std::runtime_error("already running");
 
 	std::vector<common::task<void>> tasks;
 	m_running = true;
@@ -54,42 +49,59 @@ std::future<void> client_manager::run()
 	while (m_running)
 	{
 		auto socket = co_await common::async_acccept(m_acceptor);
-		auto &sess = m_potentials.emplace_back(std::move(socket));
-		auto sess_iter = --m_potentials.end();
-
-		auto task = [this, &sess, sess_iter]() -> common::task<void>
+		auto task = [this, &tasks, socket{ std::move(socket) }]() mutable ->common::task<void>
 		{				
 			try
 			{
-				co_await sess.initialize();
-				for (auto & session : m_clients)
+				potential_client potential{ std::move(socket) };
+				auto data = co_await potential.recv_hello();
+				for (auto &session : m_clients)
 				{
-					if (session.get_mac_addr() == sess.get_mac_addr())
+					if (data.mac == session.mac())
 					{
-						co_await sess.quit("mac already registered");
-						throw;
+						std::cerr << '[' << common::to_string(data.mac) << "][ERR] tried to connect, but mac already connected\n";
+						co_await potential.reject("mac already registered");
+						co_return;
 					}
 				}
 
-				auto &client = m_clients.emplace_back(std::move(sess));
-				m_potentials.erase(sess_iter);
-				auto &client_iter = --m_clients.end();
+				co_await potential.accept();
+				auto client = m_clients.emplace(m_clients.end(), std::move(potential), std::move(data));
+				std::cout << '[' << client->mac() << "] connected\n";
 
 				try
 				{
-					co_await client.run();
+					co_await client->run();
+				}
+				catch (std::exception &e)
+				{
+					std::cerr << '[' << common::to_string(client->mac()) << "][ERR] " << e.what() << '\n';
 				}
 				catch (...)
 				{
-				
+					std::cerr << '[' << common::to_string(client->mac()) << "][ERR] unknown exception occurred\n";
 				}
 
-				// the client has to be erased either way (error or not)
-				m_clients.erase(client_iter);
+
+				std::cout << '[' << client->mac() << "] disconnected\n";
+				m_clients.erase(client);
 			}
 			catch (...)
 			{
-				m_potentials.erase(sess_iter);
+
+			}
+
+			// this doesnt remove this coroutine from "tasks", but the next coroutine will do so
+			// this ensures that there aren't too many (acutally only one) "dead" coroutines in the tasks vector
+			if (m_running)
+			{
+				for (auto i = tasks.begin(); i != tasks.end();)
+				{
+					if (i->wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+						i = tasks.erase(i);
+					else
+						++i;
+				}
 			}
 		}();
 
@@ -98,104 +110,6 @@ std::future<void> client_manager::run()
 
 	for (auto &task : tasks)
 		co_await task;
-}
 
-potential_client::potential_client(tcp::socket socket)
-	: session(std::move(socket))
-{
-
-}
-
-std::future<void> potential_client::initialize()
-{
-	auto header = co_await recv_header();
-	if (header.get_type() != types::HELLO)
-		throw unexpected_message_error(*this, header);
-
-	auto payload = co_await recv_msg(header.get_payload_size());
-	m_hello_data = deserialize<protocol::hello_data>(payload);
-	m_initialized = true;
-}
-
-const protocol::hello_data &potential_client::get_hello_data() const
-{
-	if (!m_initialized)
-		throw std::runtime_error("not initialized");
-
-	return m_hello_data;
-}
-
-const cnc::common::mac_addr &potential_client::get_mac_addr() const
-{
-	return get_hello_data().mac;
-}
-
-client::client(potential_client session)
-	: potential_client(std::move(session))
-{
-
-}
-
-std::future<void> client::run()
-{
-	m_running = true;
-	while (m_running)
-	{
-		auto header = co_await recv_header();
-		switch (header.get_type())
-		{
-		case types::RECV_FILE:
-		{
-			auto path = deserialize<std::filesystem::path>(co_await recv_msg(header.get_payload_size()));
-			if (!std::filesystem::is_directory(path))
-			{
-				if (!std::filesystem::create_directories(path.parent_path()))
-				{
-					co_await send_msg(types::ERR, "unable to create directories");
-					break;
-				}
-			}
-
-			std::ofstream file(path.filename(), std::ios::out | std::ios::binary);
-			if (!file)
-			{
-				co_await send_msg(types::ERR, "unable to create file");
-				break;
-			}
-
-			auto blob_header = co_await recv_header();
-			if (blob_header.get_type() != types::BLOB)
-				throw unexpected_message_error(*this, blob_header);
-
-			co_await recv_stream(file, header.get_payload_size());
-			break;
-		}
-		case types::SEND_FILE:
-		{
-			auto path = deserialize<std::filesystem::path>(co_await recv_msg(header.get_payload_size()));
-			std::ifstream file(path.native(), std::ios::in | std::ios::binary);
-			if (!file)
-			{
-				co_await send_msg(types::ERR, "unable to open file");
-				break;
-			}
-
-			co_await send_stream(types::BLOB, file, std::filesystem::file_size(path));
-			break;
-		}
-		case types::QUIT:
-		{
-			auto msg = co_await recv_msg(header.get_payload_size());
-			close();
-			break;
-		}
-		default:
-			throw unexpected_message_error(*this, header);
-		}
-	}
-}
-
-void client::stop()
-{
-	m_running = false;
+	tasks.clear();
 }

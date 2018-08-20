@@ -1,4 +1,5 @@
 #include "command_client.h"
+#include "../common/async_net.h"
 #include <cstdint>
 #include <boost/beast/core.hpp>
 #include <boost/asio/use_future.hpp>
@@ -12,6 +13,63 @@ using namespace cnc::server;
 using namespace cnc::common::server;
 using observer::protocol;
 using types = protocol::types;
+
+template<class NextLayer>
+auto async_close(boost::beast::websocket::stream<NextLayer>& stream, boost::beast::websocket::close_code close_code)
+{
+	struct [[nodiscard]] Awaitable
+	{
+		decltype(stream) stream;
+		decltype(close_code) close_code;
+		boost::system::error_code error_code;
+
+		bool await_ready() { return false; }
+		void await_suspend(std::experimental::coroutine_handle<> handle)
+		{
+			stream.async_close(close_code, [this, handle](auto error)
+			{
+				error_code = error;
+				handle.resume();
+			});
+		}
+
+		void await_resume()
+		{
+			if (error_code)
+				throw boost::system::system_error(error_code);
+		}
+	};
+
+	return Awaitable{ stream, close_code };
+}
+
+template<class NextLayer>
+auto async_acccept(boost::beast::websocket::stream<NextLayer>& stream)
+{
+	struct [[nodiscard]] Awaitable
+	{
+		decltype(stream) stream;
+		boost::system::error_code error_code;
+
+		bool await_ready() { return false; }
+		void await_suspend(std::experimental::coroutine_handle<> handle)
+		{
+			stream.async_accept([this, handle](auto error)
+			{
+				error_code = error;
+				handle.resume();
+			});
+		}
+
+		void await_resume()
+		{
+			if (error_code)
+				throw boost::system::system_error(error_code);
+		}
+	};
+
+	return Awaitable{ stream };
+}
 
 types type_from_uint(std::uint64_t value)
 {
@@ -68,7 +126,8 @@ common::task<void> potential_command_client::initialize()
 
 	auto msg = co_await recv_msg();
 	if (msg.type != types::HELLO)
-		throw invalid_message_error(*this, msg, "HELLO expected");
+		throw std::runtime_error("unexpected_message");
+		//throw invalid_message_error(*this, msg, "HELLO expected");
 
 	m_initialized = true;
 	m_initializing = false;
@@ -91,7 +150,7 @@ common::task<void> command_client::run()
 		return;
 
 	m_running = true;
-	co_await m_socket.async_accept(boost::asio::use_future);
+	co_await async_acccept(m_socket);
 
 	while (m_running)
 	{
@@ -103,7 +162,8 @@ common::task<void> command_client::run()
 		case types::UNOBSERVE:
 			break;
 		default:
-			throw invalid_message_error(*this, msg, "unhandled type");
+			throw std::runtime_error("unhandled type");
+			//throw invalid_message_error(*this, msg, "unhandled type");
 		}
 	}
 }

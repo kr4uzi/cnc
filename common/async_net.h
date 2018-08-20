@@ -3,128 +3,155 @@
 #include <boost/asio/basic_socket_acceptor.hpp>
 #include <experimental/coroutine>
 
-namespace cnc {
-	namespace common {
-		template<class Protocol>
-		auto async_acccept(boost::asio::basic_socket_acceptor<Protocol> &acceptor)
+namespace cnc { namespace common {
+	template<typename Socket, typename Endpoint>
+	auto async_connect(Socket &socket, Endpoint &endpoint)
+	{
+		struct [[nodiscard]] Awaitable
 		{
-			struct Awaitable
+			Socket &m_socket;
+			Endpoint &m_endpoint;
+			boost::system::error_code m_error_code;
+
+			bool await_ready() { return false; }
+			void await_suspend(std::experimental::coroutine_handle<> handle)
 			{
-				decltype(acceptor) &acceptor;
-				typename Protocol::socket socket;
-				boost::system::error_code error_code;
-
-				bool await_ready() { return false; }
-				void await_suspend(std::experimental::coroutine_handle<> handle)
+				m_socket.async_connect(m_endpoint, [this, handle](auto error)
 				{
-					acceptor.async_accept(socket, [this, handle](auto error)
-					{
-						error_code = error;
-						handle.resume();
-					});
-				}
+					m_error_code = error;
+					handle.resume();
+				});
+			}
 
-				auto await_resume()
-				{
-					if (error_code)
-						throw boost::system::system_error(error_code);
-
-					return std::move(socket);
-				}
-			};
-
-			return Awaitable{ acceptor, decltype(Awaitable::socket){ acceptor.get_executor().context() } };
-		}
-
-		template<typename Socket, typename BufferSeq>
-		auto async_read_some(Socket &socket, const BufferSeq &buffer)
-		{
-			struct Awaitable
+			void await_resume()
 			{
-				Socket &socket;
-				const BufferSeq &buffer;
-				boost::system::error_code error_code;
-				std::size_t bytes;
+				if (m_error_code)
+					throw boost::system::system_error(m_error_code);
+			}
+		};
 
-				bool await_ready() { return false; }
-				void await_suspend(std::experimental::coroutine_handle<> handle)
-				{
-					socket.async_read_some(socket, buffer, [this, handle](auto error, auto len)
-					{
-						error_code = error;
-						bytes = len;
-						handle.resume();
-					});
-				}
-
-				auto await_resume()
-				{
-					if (error_code)
-						throw boost::system::system_error(error_code);
-
-					return bytes;
-				}
-			};
-
-			return Awaitable{ socket, buffer };
-		}
-
-		template<typename Socket, typename BufferSeq>
-		auto async_read(Socket &socket, const BufferSeq &buffer)
-		{
-			struct Awaitable
-			{
-				Socket &socket;
-				const BufferSeq &buffer;
-				boost::system::error_code error_code;
-
-				bool await_ready() { return false; }
-				void await_suspend(std::experimental::coroutine_handle<> handle)
-				{
-					boost::asio::async_read(socket, buffer, [this, handle](auto error, auto bytes)
-					{
-						error_code = error;
-						handle.resume();
-					});
-				}
-
-				void await_resume()
-				{
-					if (error_code)
-						throw boost::system::system_error(error_code);
-				}
-			};
-
-			return Awaitable{ socket, buffer };
-		}
-
-		template<typename Socket, typename BufferSeq>
-		auto async_write(Socket &socket, const BufferSeq &buffer)
-		{
-			struct Awaitable
-			{
-				Socket &socket;
-				const BufferSeq &buffer;
-				boost::system::error_code error_code;
-
-				bool await_ready() { return false; }
-				void await_suspend(std::experimental::coroutine_handle<> handle)
-				{
-					boost::asio::async_write(socket, buffer, [this, handle](auto error, auto bytes)
-					{
-						error_code = error;
-						handle.resume();
-					});
-				}
-
-				void await_resume()
-				{
-					if (error_code)
-						throw boost::system::system_error(error_code);
-				}
-			};
-
-			return Awaitable{ socket, buffer };
-		}
+		return Awaitable{ socket, endpoint };
 	}
-}
+
+	template<class Protocol>
+	auto async_acccept(boost::asio::basic_socket_acceptor<Protocol> &acceptor)
+	{
+		struct [[nodiscard]] Awaitable
+		{
+			decltype(acceptor) &acceptor;
+			typename Protocol::socket socket;
+			boost::system::error_code error_code;
+
+			bool await_ready() { return false; }
+			void await_suspend(std::experimental::coroutine_handle<> handle)
+			{
+				acceptor.async_accept(socket, [this, handle](auto error)
+				{
+					error_code = error;
+					handle.resume();
+				});
+			}
+
+			auto await_resume()
+			{
+				if (error_code)
+					throw boost::system::system_error(error_code);
+
+				return std::move(socket);
+			}
+		};
+
+		return Awaitable{ acceptor, decltype(Awaitable::socket){ acceptor.get_executor().context() } };
+	}
+
+	template<typename AsyncStream, typename BufferSequence>
+	auto async_read_some(AsyncStream &stream, BufferSequence const& buffer)
+	{
+		struct [[nodiscard]] Awaitable
+		{
+			AsyncStream& stream;
+			BufferSequence const& buffer;
+			boost::system::error_code error_code;
+			std::size_t bytes;
+
+			bool await_ready() { return false; }
+			void await_suspend(std::experimental::coroutine_handle<> handle)
+			{
+				socket.async_read_some(stream, buffer, [this, handle](auto error, auto len)
+				{
+					error_code = error;
+					bytes = len;
+					handle.resume();
+				});
+			}
+
+			auto await_resume()
+			{
+				if (error_code)
+					throw boost::system::system_error(error_code);
+
+				return bytes;
+			}
+		};
+
+		return Awaitable{ stream, buffer };
+	}
+
+	template <typename AsyncStream, typename BufferSequence>
+	auto async_read(AsyncStream &stream, BufferSequence const& buffer)
+	{
+		struct [[nodiscard]] Awaitable
+		{
+			AsyncStream& stream;
+			BufferSequence const& buffer;
+			boost::system::error_code error_code;
+
+			bool await_ready() { return false; }
+			void await_suspend(std::experimental::coroutine_handle<> handle)
+			{
+				boost::asio::async_read(stream, buffer, [this, handle](auto error, auto bytes)
+				{
+					error_code = error;
+					handle.resume();
+				});
+			}
+
+			void await_resume()
+			{
+				if (error_code)
+					throw boost::system::system_error(error_code);
+			}
+		};
+
+		return Awaitable{ stream, buffer };
+	}
+
+	template<typename AsyncStream, typename BufferSequence>
+	auto async_write(AsyncStream& stream, BufferSequence const& buffer)
+	{
+		struct [[nodiscard]] Awaitable
+		{
+			AsyncStream& stream;
+			BufferSequence const& buffer;
+			boost::system::error_code error_code;
+
+			bool await_ready() { return false; }
+			void await_suspend(std::experimental::coroutine_handle<> handle)
+			{
+				boost::asio::async_write(stream, buffer, [this, handle](auto error, auto bytes)
+				{
+					error_code = error;
+					handle.resume();
+				});
+			}
+
+			void await_resume()
+			{
+				if (error_code)
+					throw boost::system::system_error(error_code);
+			}
+		};
+
+		return Awaitable{ stream, buffer };
+	}
+} }

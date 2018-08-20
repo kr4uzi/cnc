@@ -60,21 +60,29 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="C:\boost_1_67_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
+    <Import Project="..\..\..\..\..\pybind11\pybind11.props" />
+    <Import Project="..\..\..\..\..\Python37-32\python.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="C:\boost_1_67_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
+    <Import Project="..\..\..\..\..\pybind11\pybind11.props" />
+    <Import Project="..\..\..\..\..\Python37-32\python.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="C:\boost_1_67_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
+    <Import Project="..\..\..\..\..\pybind11\pybind11.props" />
+    <Import Project="..\..\..\..\..\Python37-32\python.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="C:\boost_1_67_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
+    <Import Project="..\..\..\..\..\pybind11\pybind11.props" />
+    <Import Project="..\..\..\..\..\Python37-32\python.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -145,15 +153,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="client.h" />
     <ClInclude Include="client_manager.h" />
     <ClInclude Include="command_client_manager.h" />
     <ClInclude Include="command_client.h" />
+    <ClInclude Include="py_manager.h" />
+    <ClInclude Include="singleton.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="client.cpp" />
     <ClCompile Include="command_client_manager.cpp" />
     <ClCompile Include="command_client.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="client_manager.cpp" />
+    <ClCompile Include="py_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\common.vcxproj">

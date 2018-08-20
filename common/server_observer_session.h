@@ -3,67 +3,63 @@
 #include "server_observer_protocol.h"
 #include <filesystem>
 
-namespace cnc {
-	namespace common {
-		namespace server {
-			namespace observer {
-				struct session : basic_session<protocol>
-				{
-					session(boost::asio::ip::tcp::socket socket);
-					session(session &&) = default;
-					session &operator=(session &&) = default;
+namespace cnc { namespace common { namespace server { namespace observer { namespace send {
+	struct session : protected basic_session<protocol>
+	{
+		using protocol = protocol;
 
-					struct [[nodiscard]] err_or_empty_ok_result
-					{
-						bool err;
-						std::string err_msg;
-					};
+		session(boost::asio::ip::tcp::socket socket);
+		session(session &&) = default;
+		session &operator=(session &&) = default;
 
-					struct [[nodiscard]] err_or_ok_result : err_or_empty_ok_result
-					{
-						std::string msg;
-					};
+		struct [[nodiscard]] err_or_empty_ok_result
+		{
+			bool err;
+			std::string err_msg;
+		};
 
-					struct hello_result : err_or_empty_ok_result
-					{
-						protocol::clients clients;
-					};
-					[[nodiscard]]
-					task<hello_result> hello();
+		struct [[nodiscard]] err_or_ok_result : err_or_empty_ok_result
+		{
+			std::string msg;
+		};
 
-					using recv_file_result = err_or_empty_ok_result;
-					[[nodiscard]]
-					task<recv_file_result> recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size);
-					using send_file_result = err_or_empty_ok_result;
-					[[nodiscard]]
-					task<send_file_result> send_file(const std::filesystem::path &path, std::ostream &out);
+		struct hello_result : err_or_empty_ok_result
+		{
+			protocol::clients clients;
+		};
+		[[nodiscard]]
+		task<hello_result> hello();
 
-					struct observe_result : err_or_empty_ok_result
-					{
-						protocol::logs logs;
-					};
-					[[nodiscard]]
-					task<observe_result> observe(const mac_addr &data);
-					using unobserve_result = err_or_empty_ok_result;
-					[[nodiscard]]
-					task<unobserve_result> unobserve(const mac_addr &mac);
+		using recv_file_result = err_or_empty_ok_result;
+		[[nodiscard]]
+		task<recv_file_result> recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size);
+		using send_file_result = err_or_empty_ok_result;
+		[[nodiscard]]
+		task<send_file_result> send_file(const std::filesystem::path &path, std::ostream &out);
 
-					using connect_result = err_or_empty_ok_result;
-					[[nodiscard]]
-					task<connect_result> connect(const protocol::connect_data &data);
+		struct observe_result : err_or_empty_ok_result
+		{
+			protocol::logs logs;
+		};
+		[[nodiscard]]
+		task<observe_result> observe(const mac_addr &data);
+		using unobserve_result = err_or_empty_ok_result;
+		[[nodiscard]]
+		task<unobserve_result> unobserve(const mac_addr &mac);
 
-					using quit_result = err_or_empty_ok_result;
-					[[nodiscard]]
-					task<quit_result> quit(const std::string &message);
-					[[nodiscard]]
-					task<quit_result> quit();
+		using connect_result = err_or_empty_ok_result;
+		[[nodiscard]]
+		task<connect_result> connect(const protocol::connect_data &data);
 
-					[[nodiscard]]
-					task<err_or_empty_ok_result> recv_err_or_empty_ok(const protocol::header &header);
-					[[nodiscard]]
-					task<err_or_ok_result> recv_err_or_ok(const protocol::header &header);
-				};
-			}
-		}
-	}
-}
+		using quit_result = err_or_empty_ok_result;
+		[[nodiscard]]
+		task<quit_result> quit(const std::string &message);
+		[[nodiscard]]
+		task<quit_result> quit();
+
+		[[nodiscard]]
+		task<err_or_empty_ok_result> recv_err_or_empty_ok(const protocol::header &header);
+		[[nodiscard]]
+		task<err_or_ok_result> recv_err_or_ok(const protocol::header &header);
+	};
+} } } } }

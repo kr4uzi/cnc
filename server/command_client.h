@@ -58,6 +58,8 @@ namespace cnc {
 			[[nodiscard]]
 			common::task<void> close(boost::beast::websocket::close_code reason);
 
+			boost::asio::ip::address ip() const { return m_socket.next_layer().remote_endpoint().address(); }
+
 		protected:
 			[[nodiscard]]
 			common::task<websocket_message> recv_msg();

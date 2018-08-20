@@ -1,13 +1,21 @@
 #include "command_client_manager.h"
-#include "../common/async_net.h"
+#include "command_client.h"
+#include <common/async_net.h>
+#include <iostream>
 using namespace cnc;
 using namespace cnc::server;
 using boost::asio::ip::tcp;
 using boost::beast::websocket::close_code;
 using cnc::common::server::observer::protocol;
 
+singleton<command_client_manager> *singleton<command_client_manager>::m_instance;
 command_client_manager::command_client_manager(boost::asio::io_context &context)
 	: m_context(context), m_acceptor(context, tcp::endpoint(tcp::v4(), protocol::tcp_port))
+{
+
+}
+
+command_client_manager::~command_client_manager()
 {
 
 }
@@ -19,45 +27,63 @@ common::task<void> command_client_manager::run()
 
 	std::vector<common::task<void>> tasks;
 	m_running = true;
-	
+
 	while (m_running)
 	{
-		auto socket = co_await common::async_acccept(m_acceptor);		
-		auto &sess = m_potentials.emplace_back(std::move(socket));
-		auto sess_iter = --m_potentials.end();
-
-		auto task = [this, &sess, sess_iter]() -> common::task<void>
+		auto socket = co_await common::async_acccept(m_acceptor);
+		auto task = [this, &tasks, socket{ std::move(socket) }]() mutable ->common::task<void>
 		{
 			try
 			{
-				co_await sess.initialize();
+				potential_command_client potential{ std::move(socket) };
+				co_await potential.initialize();
 
-				auto &client = m_clients.emplace_back(std::move(sess));
-				m_potentials.erase(sess_iter);
+				auto client = m_clients.emplace(m_clients.end(), std::move(potential));
+				std::cout << "[cmdmgr][" << client->ip() << "] connected\n";
 
-				auto client_iter = --m_clients.end();
 				try
 				{
-					co_await client.run();
+					co_await client->run();
+				}
+				catch (std::exception &e)
+				{
+					std::cerr << "[cmdmgr][" << client->ip() << "][ERR] " << e.what() << '\n';
 				}
 				catch (...)
 				{
-
+					std::cerr << "[cmdmgr][" << client->ip() << "][ERR] unknown exception occurred\n";
 				}
 
-				m_clients.erase(client_iter);
+				std::cout << "[cmdmgr][" << client->ip() << "] disconnected\n";
+				m_clients.erase(client);
 			}
 			catch (...)
 			{
-				m_potentials.erase(sess_iter);
+
+			}
+
+			// this doesnt remove this coroutine from "tasks", but the next coroutine will do so
+			// this ensures that there aren't too many (acutally only one) "dead" coroutines in the tasks vector
+			if (m_running)
+			{
+				for (auto i = tasks.begin(); i != tasks.end();)
+				{
+					if (i->wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+						i = tasks.erase(i);
+					else
+						++i;
+				}
 			}
 		}();
 
 		tasks.push_back(std::move(task));
 	}
 
+	// at this point m_running == false, so the tasks do not invalidate the iterators of tasks
 	for (auto &task : tasks)
 		co_await task;
+
+	tasks.clear();
 }
 
 void command_client_manager::stop()

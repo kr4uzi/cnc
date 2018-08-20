@@ -6,9 +6,9 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <sstream>
 using namespace cnc::common;
-using namespace cnc::common::server::observer;
+using namespace cnc::common::server::observer::send;
 using boost::asio::ip::tcp;
-using types = protocol::types;
+using types = session::protocol::types;
 
 session::session(tcp::socket socket)
 	: basic_session<protocol>(std::move(socket))
@@ -22,7 +22,8 @@ task<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const protoc
 	{
 	case types::OK:
 		if (response.get_payload_size() != 0)
-			throw unexpected_message_error(*this, response, "no payload expected");
+			throw std::runtime_error("unexpected_message_error");
+			//throw unexpected_message_error(*this, response, "no payload expected");
 
 		co_return err_or_empty_ok_result{ false };
 
@@ -30,7 +31,8 @@ task<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const protoc
 		co_return err_or_empty_ok_result{ true, co_await recv_msg(response.get_payload_size()) };
 	}
 
-	throw unexpected_message_error(*this, response);
+	throw std::runtime_error("unexpected_message_error");
+	//throw unexpected_message_error(*this, response);
 }
 
 task<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &response)
@@ -49,43 +51,28 @@ task<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &
 	}
 	}
 
-	throw unexpected_message_error(*this, response);
+	throw std::runtime_error("unexpected_message_error");
+	//throw unexpected_message_error(*this, response);
 }
 
 task<session::observe_result> session::observe(const cnc::common::mac_addr &mac)
 {
 	co_await send_msg(types::OBSERVE, to_string(mac));
-	auto response = co_await recv_header();
-	switch (response.get_type())
-	{
-	case types::OK:
-		break;
-	case types::ERR:
-		co_return observe_result{ true, co_await recv_msg(response.get_payload_size()) };
-	default:
-		throw unexpected_message_error(*this, response);
-	}
+	auto response = co_await recv_err_or_ok(co_await recv_header());
+	if (response.err)
+		co_return observe_result{ true, response.err_msg };
 
-	auto msg = co_await recv_msg(response.get_payload_size());
-	co_return observe_result{ false, "", deserialize<protocol::logs>(msg) };
+	co_return observe_result{ false, "", deserialize<protocol::logs>(response.msg) };
 }
 
 task<session::hello_result> session::hello()
 {
 	co_await send_msg(types::OBSERVE);
-	auto response = co_await recv_header();
-	switch (response.get_type())
-	{
-	case types::OK:
-		break;
-	case types::ERR:
-		co_return hello_result{ true, co_await recv_msg(response.get_payload_size()) };
-	default:
-		throw unexpected_message_error(*this, response);
-	}
+	auto response = co_await recv_err_or_ok(co_await recv_header());
+	if (response.err)
+		co_return hello_result{ true, response.err_msg };
 
-	auto msg = co_await recv_msg(response.get_payload_size());
-	co_return hello_result{ false, "", deserialize<protocol::clients>(msg) };
+	co_return hello_result{ false, "", deserialize<protocol::clients>(response.msg) };
 }
 
 task<session::recv_file_result> session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size)
@@ -107,13 +94,9 @@ task<session::send_file_result> session::send_file(const std::filesystem::path &
 		co_return send_file_result{ true, result.err_msg };
 
 	auto response = co_await recv_header();
-	switch (response.get_type())
-	{
-	case types::BLOB:
-		break;
-	default:
-		throw unexpected_message_error(*this, response);
-	}
+	if (response.get_type() != types::BLOB)
+		throw std::runtime_error("unexpected_message_error");
+		//throw unexpected_message_error(*this, response);
 
 	co_await recv_stream(out, response.get_payload_size());
 	co_return send_file_result{ false };

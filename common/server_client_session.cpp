@@ -3,8 +3,8 @@
 #include "serialize_filesystem.h"
 using boost::asio::ip::tcp;
 using namespace cnc::common;
-using namespace cnc::common::server::client;
-using types = protocol::types;
+using namespace cnc::common::server::client::send;
+using types = session::protocol::types;
 
 session::session(tcp::socket socket)
 	: basic_session<protocol>(std::move(socket))
@@ -18,15 +18,20 @@ task<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const protoc
 	{
 	case types::OK:
 		if (response.get_payload_size() != 0)
-			throw unexpected_message_error(*this, response, "no payload expected");
+			throw std::runtime_error("unexpected_message_error");
+			//throw unexpected_message_error(*this, response, "no payload expected");
 
 		co_return err_or_empty_ok_result{ false };
 
 	case types::ERR:
-		co_return err_or_empty_ok_result{ true, co_await recv_msg(response.get_payload_size()) };
+	{
+		auto msg = co_await recv_msg(response.get_payload_size());
+		co_return err_or_empty_ok_result{ true, msg };
+	}
 	}
 
-	throw unexpected_message_error(*this, response);
+	throw std::runtime_error("unexpected_message_error");
+	//throw unexpected_message_error(*this, response);
 }
 
 task<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &response)
@@ -45,7 +50,8 @@ task<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &
 	}
 	}
 
-	throw unexpected_message_error(*this, response);
+	throw std::runtime_error("unexpected_message_error");
+	//throw unexpected_message_error(*this, response);
 }
 
 task<session::hello_result> session::hello(const protocol::hello_data &data)
@@ -79,13 +85,9 @@ task<session::send_file_result> session::send_file(const std::filesystem::path &
 		return send_file_result{ true, result.err_msg };
 
 	auto response = co_await recv_header();
-	switch (response.get_type())
-	{
-	case types::BLOB:
-		break;
-	default:
-		throw unexpected_message_error(*this, response);
-	}
+	if (response.get_type() != types::BLOB)
+		throw std::runtime_error("unexpected_message_error");
+		//throw unexpected_message_error(*this, response);
 
 	co_await recv_stream(out, response.get_payload_size());
 	co_return send_file_result{ false };

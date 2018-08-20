@@ -4,55 +4,50 @@
 #include "server_client_protocol.h"
 #include <filesystem>
 
-namespace cnc {
-	namespace common {
-		namespace server {
-			namespace client {
-				class session : public basic_session<protocol>
-				{
-				public:
-					session(boost::asio::ip::tcp::socket socket);
-					session(session &&) = default;
-					session &operator=(session &&) = default;
+namespace cnc { namespace common { namespace server { namespace client { namespace send {
+	struct session : protected basic_session<protocol>
+	{
+		using protocol = protocol;
 
-					struct [[nodiscard]] err_or_empty_ok_result
-					{
-						bool err;
-						std::string err_msg;
-					};
+		session(boost::asio::ip::tcp::socket socket);
+		session(session &&) = default;
+		session &operator=(session &&) = default;
 
-					struct [[nodiscard]] err_or_ok_result : err_or_empty_ok_result
-					{
-						std::string msg;
-					};
+		struct [[nodiscard]] err_or_empty_ok_result
+		{
+			bool err;
+			std::string err_msg;
+		};
 
-					using hello_result = err_or_empty_ok_result;
-					[[nodiscard]]
-					task<hello_result> hello(const protocol::hello_data &data);
+		struct [[nodiscard]] err_or_ok_result : err_or_empty_ok_result
+		{
+			std::string msg;
+		};
 
-					using connect_result = err_or_empty_ok_result;
-					[[nodiscard]]
-					task<connect_result> connect(const protocol::connect_data &data);
+		using hello_result = err_or_empty_ok_result;
+		[[nodiscard]]
+		task<hello_result> hello(const protocol::hello_data &data);
 
-					using recv_file_result = err_or_empty_ok_result;
-					[[nodiscard]]
-					task<recv_file_result> recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size);
-					using send_file_result = err_or_empty_ok_result;
-					[[nodiscard]]
-					task<send_file_result> send_file(const std::filesystem::path &path, std::ostream &out);
+		using connect_result = err_or_empty_ok_result;
+		[[nodiscard]]
+		task<connect_result> connect(const protocol::connect_data &data);
 
-					using quit_result = err_or_empty_ok_result;
-					[[nodiscard]]
-					task<quit_result> quit();
-					[[nodiscard]]
-					task<quit_result> quit(const std::string &msg);
+		using recv_file_result = err_or_empty_ok_result;
+		[[nodiscard]]
+		task<recv_file_result> recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size);
+		using send_file_result = err_or_empty_ok_result;
+		[[nodiscard]]
+		task<send_file_result> send_file(const std::filesystem::path &path, std::ostream &out);
 
-					[[nodiscard]]
-					task<err_or_empty_ok_result> recv_err_or_empty_ok(const protocol::header &header);
-					[[nodiscard]]
-					task<err_or_ok_result> recv_err_or_ok(const protocol::header &header);
-				};
-			}
-		}
-	}
-}
+		using quit_result = err_or_empty_ok_result;
+		[[nodiscard]]
+		task<quit_result> quit();
+		[[nodiscard]]
+		task<quit_result> quit(const std::string &msg);
+
+		[[nodiscard]]
+		task<err_or_empty_ok_result> recv_err_or_empty_ok(const protocol::header &header);
+		[[nodiscard]]
+		task<err_or_ok_result> recv_err_or_ok(const protocol::header &header);
+	};
+} } } } }

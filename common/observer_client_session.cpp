@@ -2,8 +2,8 @@
 #include "serialize_filesystem.h"
 
 using namespace cnc::common;
-using namespace cnc::common::observer::client;
-using types = protocol::types;
+using namespace cnc::common::observer::client::send;
+using types = session::protocol::types;
 
 session::session(boost::asio::ip::tcp::socket socket)
 	: basic_session<protocol>(std::move(socket))
@@ -13,13 +13,15 @@ session::session(boost::asio::ip::tcp::socket socket)
 
 task<session::hello_result> session::hello()
 {
-	co_return co_await hello("");
+	auto result = co_await hello("");
+	co_return result;
 }
 
 task<session::hello_result> session::hello(const std::string &msg)
 {
 	co_await send_msg(types::HELLO, msg);
-	co_return co_await recv_err_or_ok(co_await recv_header());
+	auto result = co_await recv_err_or_ok(co_await recv_header());
+	co_return result;
 }
 
 task<session::create_directory_result> session::create_directory(const std::filesystem::path &path)
@@ -31,19 +33,11 @@ task<session::create_directory_result> session::create_directory(const std::file
 task<session::list_directory_result> session::list_directory(const std::filesystem::path &path)
 {
 	co_await send_msg(types::LIST_DIRECTORY, path.string());
-	auto response = co_await recv_header();
-	switch (response.get_type())
-	{
-	case types::OK:
-		break;
-	case types::ERR:
-		co_return list_directory_result{ true, co_await recv_msg(response.get_payload_size()) };
-	default:
-		throw unexpected_message_error(*this, response);
-	}
+	auto response = co_await recv_err_or_ok(co_await recv_header());
+	if (response.err)
+		co_return list_directory_result{ false, response.err_msg };
 
-	auto msg = co_await recv_msg(response.get_payload_size());
-	co_return list_directory_result{ false, "", protocol::directory_view_from_string(msg) };
+	co_return list_directory_result{ false, "", common::deserialize<protocol::directory_view>(response.msg) };
 }
 
 task<session::recv_file_result> session::recv_file(const std::filesystem::path &path, std::istream &in, protocol::header::size_type size)
@@ -65,13 +59,9 @@ task<session::send_file_result> session::send_file(const std::filesystem::path &
 		co_return send_file_result{ true, result.err_msg };
 
 	auto response = co_await recv_header();
-	switch (response.get_type())
-	{
-	case types::BLOB:
-		break;
-	default:
-		throw unexpected_message_error(*this, response);
-	}
+	if (response.get_type() != types::BLOB)
+		throw std::runtime_error("unexpected_message_error");
+		//throw unexpected_message_error(*this, response);
 
 	co_await recv_stream(out, response.get_payload_size());
 	co_return send_file_result{ false };
@@ -101,7 +91,8 @@ task<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const protoc
 	{
 	case types::OK:
 		if (response.get_payload_size() != 0)
-			throw unexpected_message_error(*this, response, "no payload expected");
+			throw std::runtime_error("unexpected_message_error");
+			//throw unexpected_message_error(*this, response, "no payload expected");
 
 		co_return err_or_empty_ok_result{ false };
 
@@ -109,11 +100,12 @@ task<session::err_or_empty_ok_result> session::recv_err_or_empty_ok(const protoc
 		co_return err_or_empty_ok_result{ true, co_await recv_msg(response.get_payload_size()) };
 	}
 
-	throw unexpected_message_error(*this, response);
+	throw std::runtime_error("unexpected_message_error");
+	//throw unexpected_message_error(*this, response);
 }
 
 task<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &response)
-{	
+{
 	switch (response.get_type())
 	{
 	case types::OK:
@@ -128,5 +120,6 @@ task<session::err_or_ok_result> session::recv_err_or_ok(const protocol::header &
 	}
 	}
 
-	throw unexpected_message_error(*this, response);
+	throw std::runtime_error("unexpected_message_error");
+	//throw unexpected_message_error(*this, response);
 }
