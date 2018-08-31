@@ -9,7 +9,7 @@ namespace cnc { namespace common {
 		typename protocol,
 		typename byte_type_t = std::uint8_t,
 		typename size_type_t = std::size_t,
-		typename = std::enable_if_t<std::is_enum_v<protocol::types>>,
+		typename = std::enable_if_t<std::is_enum_v<typename protocol::types>>,
 		typename = std::enable_if_t<
 		std::is_same_v<std::remove_cv_t<byte_type_t>, std::remove_cv_t<decltype(protocol::magic_byte)>>
 		>

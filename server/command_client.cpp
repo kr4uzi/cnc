@@ -1,5 +1,5 @@
 #include "command_client.h"
-#include "../common/async_net.h"
+#include <common/async_net.h>
 #include <cstdint>
 #include <boost/beast/core.hpp>
 #include <boost/asio/use_future.hpp>
@@ -121,13 +121,14 @@ common::task<void> potential_command_client::initialize()
 	else if (m_initialized || m_initializing)
 		return;
 
+	m_initialized = false;
 	m_initializing = true;
 	co_await m_socket.async_accept(boost::asio::use_future);
 
 	auto msg = co_await recv_msg();
 	if (msg.type != types::HELLO)
 		throw std::runtime_error("unexpected_message");
-		//throw invalid_message_error(*this, msg, "HELLO expected");
+	//throw invalid_message_error(*this, msg, "HELLO expected");
 
 	m_initialized = true;
 	m_initializing = false;
@@ -141,7 +142,10 @@ command_client::command_client(potential_command_client client)
 
 void command_client::stop()
 {
-	m_running = false;
+	if (!m_running || m_stopping)
+		return;
+
+	m_stopping = true;
 }
 
 common::task<void> command_client::run()
@@ -152,18 +156,32 @@ common::task<void> command_client::run()
 	m_running = true;
 	co_await async_acccept(m_socket);
 
-	while (m_running)
+	while (!m_stopping)
 	{
-		auto msg = co_await recv_msg();
-		switch (msg.type)
+		try
 		{
-		case types::OBSERVE:
-			break;
-		case types::UNOBSERVE:
-			break;
-		default:
-			throw std::runtime_error("unhandled type");
-			//throw invalid_message_error(*this, msg, "unhandled type");
+			auto msg = co_await recv_msg();
+			switch (msg.type)
+			{
+			case types::OBSERVE:
+				break;
+			case types::UNOBSERVE:
+				break;
+			default:
+				throw std::runtime_error("unhandled type");
+				//throw invalid_message_error(*this, msg, "unhandled type");
+			}
+		}
+		catch (...)
+		{
+			if (m_stopping)
+				break;
+
+			throw;
 		}
 	}
+
+	co_await close(boost::beast::websocket::close_code::normal);
+	m_running = false;
+	m_stopping = false;
 }

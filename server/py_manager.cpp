@@ -1,4 +1,6 @@
 #include "py_manager.h"
+#include "client_manager.h"
+#include "command_client_manager.h"
 #include <boost/asio/steady_timer.hpp>
 #include <pybind11/embed.h>
 #include <pybind11/stl.h>
@@ -22,12 +24,17 @@ PYBIND11_EMBEDDED_MODULE(host, m)
 	{
 		py_manager::instance().unregisterHandler(name, func);
 	});
+
+	m.def("clientMgr_isValidIndex", [](unsigned int i)
+	{
+
+	});
 }
 } }
 
 singleton<py_manager> *singleton<py_manager>::m_instance;
-py_manager::py_manager(boost::asio::io_context &context)
-	: m_context(context)
+py_manager::py_manager(boost::asio::io_context &context, client_manager &client_mgr, command_client_manager &command_client_mgr)
+	: m_context(context), m_clients(client_mgr), m_commanders(command_client_mgr)
 {
 
 }
@@ -53,14 +60,29 @@ common::task<void> py_manager::run(std::chrono::steady_clock::duration clock, st
 	if (m_running)
 		throw std::runtime_error("already running");
 
-	m_running = true;
-	pybind11::scoped_interpreter interpreter;
+	std::cout << "running python at a frequency of 1/" << clock.count() << " ns and a runtime of " << time.count << " ns\n";
 
+	m_running = true;
+	py::scoped_interpreter interpreter{};
+
+	//py::gil_scoped_acquire scope;
 	auto sys = py::module::import("sys");
 	sys.attr("path") = std::array<std::string, 3>{ ".", "python", "python37.zip" };
 	sys.attr("dont_write_bytecode") = true;
 
-	py::module::import("python");
+	try
+	{
+		std::cout << "importing main cnc module python/cnc\n";
+		py::module::import("cnc");
+	}
+	catch (py::error_already_set &e)
+	{
+		std::cout << "failed to import, exception:\n"
+			<< e.what() << '\n';
+
+		co_return;
+	}
+	
 	while (m_running)
 	{
 		boost::asio::steady_timer timer{ m_context, clock };

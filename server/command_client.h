@@ -1,6 +1,6 @@
 #pragma once
-#include "../common/task.h"
-#include "../common/server_observer_protocol.h"
+#include <common/task.h>
+#include <common/server_observer_protocol.h>
 #include <boost/beast/websocket/stream.hpp>
 #include <json_spirit/value.h>
 
@@ -53,26 +53,23 @@ namespace cnc {
 			potential_command_client &operator=(potential_command_client &&) = default;
 			~potential_command_client();
 
-			[[nodiscard]]
 			common::task<void> initialize();
-			[[nodiscard]]
 			common::task<void> close(boost::beast::websocket::close_code reason);
 
 			boost::asio::ip::address ip() const { return m_socket.next_layer().remote_endpoint().address(); }
 
 		protected:
-			[[nodiscard]]
 			common::task<websocket_message> recv_msg();
 		};
 
 		class command_client : public potential_command_client
 		{
 			bool m_running = false;
+			bool m_stopping = false;
 
 		public:
 			command_client(potential_command_client client);
 
-			[[nodiscard]]
 			common::task<void> run();
 			void stop();
 		};

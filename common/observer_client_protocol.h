@@ -34,7 +34,7 @@ namespace cnc { namespace common { namespace observer { namespace client {
 		static constexpr std::uint8_t magic_byte = 0x3;
 
 		using header = header<protocol>;
-		using directory_view = std::vector<std::tuple<std::filesystem::path, std::filesystem::file_status>>;		
+		using directory_view = std::vector<std::tuple<std::filesystem::path, std::filesystem::file_status>>;
 	};
 
 	template<class CharT, class Traits>

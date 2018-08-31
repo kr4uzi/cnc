@@ -10,7 +10,7 @@ int main()
 	boost::asio::io_context context;
 	client_manager client_mgr(context);
 	command_client_manager command_mgr(context);
-	py_manager py_mgr(context);
+	py_manager py_mgr(context, client_mgr, command_mgr);
 	boost::asio::signal_set signals(context);
 
 	auto client_task = client_mgr.run();
@@ -21,11 +21,8 @@ int main()
 
 	signals.async_wait([&](auto error, auto signal)
 	{
-		static bool stopping;
-		if (stopping)
-			return;
+		signals.cancel();
 
-		stopping = true;
 		[&]() -> std::future<void>
 		{
 			py_mgr.stop();

@@ -139,22 +139,22 @@
   <ItemGroup>
     <ClCompile Include="config.cpp" />
     <ClCompile Include="mac_addr.cpp" />
-    <ClCompile Include="mac_addr_win.cpp" />
+    <ClCompile Include="mac_addrs_win.cpp" />
     <ClCompile Include="serialize_network.cpp" />
     <ClCompile Include="serialize_filesystem.cpp" />
     <ClCompile Include="server_client_protocol.cpp" />
-    <ClCompile Include="server_observer_session.cpp" />
+    <ClCompile Include="server_observer_send.cpp" />
     <ClCompile Include="server_observer_protocol.cpp" />
     <ClCompile Include="observer_client_protocol.cpp" />
-    <ClCompile Include="observer_client_session.cpp" />
-    <ClCompile Include="basic_session.cpp" />
-    <ClCompile Include="server_client_session.cpp" />
+    <ClCompile Include="observer_client_send.cpp" />
+    <ClCompile Include="session.cpp" />
+    <ClCompile Include="server_client_send.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="async_net.h" />
     <ClInclude Include="async_timer.h" />
     <ClInclude Include="default_deserialize.h" />
-    <ClInclude Include="observer_client_session.h" />
+    <ClInclude Include="observer_client_send.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="header.h" />
     <ClInclude Include="mac_addr.h" />
@@ -163,11 +163,12 @@
     <ClInclude Include="serialize_filesystem.h" />
     <ClInclude Include="serialize_tuple.h" />
     <ClInclude Include="server_client_protocol.h" />
-    <ClInclude Include="server_observer_session.h" />
+    <ClInclude Include="server_observer_send.h" />
     <ClInclude Include="observer_client_protocol.h" />
-    <ClInclude Include="basic_session.h" />
-    <ClInclude Include="server_client_session.h" />
+    <ClInclude Include="session.h" />
+    <ClInclude Include="server_client_send.h" />
     <ClInclude Include="task.h" />
+    <ClInclude Include="task2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

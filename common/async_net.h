@@ -1,6 +1,8 @@
 #pragma once
 #include <boost/asio/basic_socket.hpp>
 #include <boost/asio/basic_socket_acceptor.hpp>
+#include <boost/asio/read.hpp>
+#include <boost/asio/write.hpp>
 #include <experimental/coroutine>
 
 namespace cnc { namespace common {

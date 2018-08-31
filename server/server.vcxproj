@@ -60,29 +60,29 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="C:\boost_1_67_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
-    <Import Project="C:\pybind11\pybind11.props" />
     <Import Project="C:\Python37-32\python.props" />
+    <Import Project="C:\pybind11\pybind11.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="C:\boost_1_67_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
-    <Import Project="C:\pybind11\pybind11.props" />
     <Import Project="C:\Python37-32\python.props" />
+    <Import Project="C:\pybind11\pybind11.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="C:\boost_1_67_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
+    <Import Project="C:\Python37-64\python.props" />
     <Import Project="C:\pybind11\pybind11.props" />
-    <Import Project="C:\Python37-32\python.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="C:\boost_1_67_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
+    <Import Project="C:\Python37-64\python.props" />
     <Import Project="C:\pybind11\pybind11.props" />
-    <Import Project="C:\Python37-32\python.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -98,6 +98,9 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/await %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <Link />
+    <Link />
+    <Link />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -111,6 +114,9 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/await %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <Link />
+    <Link />
+    <Link />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -157,6 +163,7 @@
     <ClInclude Include="client_manager.h" />
     <ClInclude Include="command_client_manager.h" />
     <ClInclude Include="command_client.h" />
+    <ClInclude Include="converters.h" />
     <ClInclude Include="py_manager.h" />
     <ClInclude Include="singleton.h" />
   </ItemGroup>
@@ -164,6 +171,7 @@
     <ClCompile Include="client.cpp" />
     <ClCompile Include="command_client_manager.cpp" />
     <ClCompile Include="command_client.cpp" />
+    <ClCompile Include="converters.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="client_manager.cpp" />
     <ClCompile Include="py_manager.cpp" />

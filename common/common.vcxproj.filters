@@ -18,16 +18,10 @@
     <ClCompile Include="config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="basic_session.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="serialize_filesystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="serialize_network.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="server_observer_session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="server_observer_protocol.cpp">
@@ -36,19 +30,25 @@
     <ClCompile Include="server_client_protocol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="server_client_session.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="observer_client_protocol.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="observer_client_session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mac_addr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mac_addr_win.cpp">
+    <ClCompile Include="observer_client_send.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="session.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="server_client_send.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="server_observer_send.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mac_addrs_win.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,9 +65,6 @@
     <ClInclude Include="serialize_filesystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="basic_session.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="serialize_network.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -80,28 +77,34 @@
     <ClInclude Include="server_observer_protocol.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="server_observer_session.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="server_client_session.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="task.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="async_net.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="observer_client_protocol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="observer_client_session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="default_deserialize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="async_timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="observer_client_send.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="session.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="server_client_send.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="server_observer_send.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="async_net.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="task2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

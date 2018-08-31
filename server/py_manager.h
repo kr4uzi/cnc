@@ -10,10 +10,15 @@
 #include <pybind11/pytypes.h>
 
 namespace cnc { namespace server {
+	class client_manager;
+	class command_client_manager;
+
 	class py_manager : public singleton<py_manager>
 	{
 		bool m_running = false;
 		boost::asio::io_context &m_context;
+		client_manager &m_clients;
+		command_client_manager &m_commanders;
 		std::map<std::string, std::vector<pybind11::function>> m_handlers;
 
 	private:
@@ -23,7 +28,7 @@ namespace cnc { namespace server {
 		void unregisterHandler(const std::string &name, pybind11::function func);
 
 	public:
-		py_manager(boost::asio::io_context &context);
+		py_manager(boost::asio::io_context &context, client_manager &client_mgr, command_client_manager &command_client_mgr);
 		~py_manager();
 
 		common::task<void> run(std::chrono::steady_clock::duration clock, std::chrono::steady_clock::duration time);
