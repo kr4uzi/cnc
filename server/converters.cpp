@@ -1,4 +1,5 @@
 #include "converters.h"
+#include <pybind11/pybind11.h>
 #include <regex>
 using namespace pybind11;
 using namespace pybind11::detail;
@@ -30,14 +31,25 @@ handle type_caster<cnc::common::mac_addr>::cast(const cnc::common::mac_addr &src
 
 bool type_caster<cnc::common::server::client::protocol::hello_data>::load(handle src, bool)
 {
-	auto tuple = src.cast<pybind11::tuple>();
-	value.mac = tuple[0].cast<cnc::common::mac_addr>();
-	return true;
+	try
+	{
+		auto tuple = src.cast<pybind11::tuple>();
+		value.mac = tuple[0].cast<cnc::common::mac_addr>();
+		return true;
+	}
+	catch (...)
+	{
+		return false;
+	}
 }
 
-handle type_caster<cnc::common::server::client::protocol::hello_data>::cast(const cnc::common::server::client::protocol::hello_data &src, return_value_policy policy, handle)
+handle type_caster<cnc::common::server::client::protocol::hello_data>::cast(const cnc::common::server::client::protocol::hello_data &src, return_value_policy, handle)
 {
-	pybind11::tuple tuple{ 1 };
-	tuple[0] = type_caster<cnc::common::mac_addr>::cast(src.mac, policy, tuple);
+	auto dict = pybind11::dict("mac"_a = src.mac);
+	dict.inc_ref();
+	return dict;
+
+	auto tuple = pybind11::make_tuple(src.mac);
+	tuple.inc_ref();
 	return tuple;
 }

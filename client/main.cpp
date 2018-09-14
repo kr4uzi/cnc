@@ -142,10 +142,13 @@ int main(int argc, char *argv[])
 		}
 
 		signals.cancel();
-	}();
+	}();	
 
 	signals.async_wait([&](auto error, auto signal)
 	{
+		if (error)
+			return;
+
 		static bool stopping;
 		if (stopping)
 		{

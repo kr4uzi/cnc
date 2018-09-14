@@ -36,7 +36,6 @@ namespace cnc { namespace server {
 			bool m_running = false;
 			bool m_stopping = false;
 			bool m_quit = false;
-			bool m_stopping = false;
 			protocol::hello_data m_data;
 
 		public:

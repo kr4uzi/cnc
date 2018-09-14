@@ -25,9 +25,14 @@ PYBIND11_EMBEDDED_MODULE(host, m)
 		py_manager::instance().unregisterHandler(name, func);
 	});
 
-	m.def("clientMgr_isValidIndex", [](unsigned int i)
+	m.def("sendMessageToClient", [](const boost::asio::ip::address &addr, const std::string &msg, py::function callback)
 	{
+		py_manager::instance().sendMessageToClient(addr, msg, callback);
+	});
 
+	m.def("sendMessageToCommander", [](boost::asio::ip::address &addr, const std::string &msg, pybind11::function callback)
+	{
+		py_manager::instance().sendMessageToCommander(addr, msg, callback);
 	});
 }
 } }
@@ -60,7 +65,9 @@ common::task<void> py_manager::run(std::chrono::steady_clock::duration clock, st
 	if (m_running)
 		throw std::runtime_error("already running");
 
-	std::cout << "running python at a frequency of 1/" << clock.count() << " ns and a runtime of " << time.count << " ns\n";
+	using ms = std::chrono::milliseconds;
+	using std::chrono::duration_cast;
+	std::cout << "running python at a frequency of 1/" << duration_cast<ms>(clock).count() << " ms and a runtime of " << std::chrono::duration_cast<ms>(time).count() << " ms\n";
 
 	m_running = true;
 	py::scoped_interpreter interpreter{};

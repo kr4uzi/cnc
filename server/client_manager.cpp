@@ -85,9 +85,8 @@ std::future<void> client_manager::run()
 						std::cerr << '[' << common::to_string(client->mac()) << "][ERR] unknown exception occurred\n";
 					}
 
-
-					std::cout << '[' << client->mac() << "] disconnected\n";
 					py_manager::instance().handle("ClientDisconnect", client->mac());
+					std::cout << '[' << client->mac() << "] disconnected\n";					
 					m_clients.erase(client);
 				}
 				catch (...)

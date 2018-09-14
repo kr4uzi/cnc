@@ -8,8 +8,7 @@
 #include <condition_variable>
 #include <experimental/coroutine>
 
-namespace common
-{
+namespace cnc { namespace common {
 	template<typename T>
 	class task;
 
@@ -141,6 +140,8 @@ namespace common
 				m_coroutine = rhs.m_coroutine;
 				rhs.m_coroutine = nullptr;
 			}
+
+			return *this;
 		}
 
 		explicit task(handle_type coroutine)
@@ -227,4 +228,4 @@ namespace common
 
 		return f.await_resume();
 	}
-}
+} }

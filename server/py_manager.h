@@ -2,6 +2,7 @@
 #include "singleton.h"
 #include <common/task.h>
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/address.hpp>
 #include <chrono>
 #include <map>
 #include <string>
@@ -26,6 +27,9 @@ namespace cnc { namespace server {
 
 		void registerHandler(const std::string &name, pybind11::function func);
 		void unregisterHandler(const std::string &name, pybind11::function func);
+
+		void sendMessageToClient(const boost::asio::ip::address &addr, const std::string &msg, pybind11::function callback);
+		void sendMessageToCommander(const boost::asio::ip::address &addr, const std::string &msg, pybind11::function callback);
 
 	public:
 		py_manager(boost::asio::io_context &context, client_manager &client_mgr, command_client_manager &command_client_mgr);

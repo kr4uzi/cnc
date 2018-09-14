@@ -1,5 +1,6 @@
 #include "command_client_manager.h"
 #include "command_client.h"
+#include "py_manager.h"
 #include <common/async_net.h>
 #include <iostream>
 using namespace cnc;
@@ -42,6 +43,7 @@ common::task<void> command_client_manager::run()
 
 					auto client = m_clients.emplace(m_clients.end(), std::move(potential));
 					std::cout << "[cmdmgr][" << client->ip() << "] connected\n";
+					py_manager::instance().handle("CommandClientConnected", client->ip());
 
 					try
 					{
@@ -56,7 +58,8 @@ common::task<void> command_client_manager::run()
 						std::cerr << "[cmdmgr][" << client->ip() << "][ERR] unknown exception occurred\n";
 					}
 
-					std::cout << "[cmdmgr][" << client->ip() << "] disconnected\n";
+					py_manager::instance().handle("CommandClientDisconnected", client->ip());
+					std::cout << "[cmdmgr][" << client->ip() << "] disconnected\n";					
 					m_clients.erase(client);
 				}
 				catch (...)
