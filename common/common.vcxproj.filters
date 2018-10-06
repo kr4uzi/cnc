@@ -51,6 +51,9 @@
     <ClCompile Include="mac_addrs_win.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="event.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h">
@@ -105,6 +108,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="task2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="event.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -4,7 +4,7 @@
 #include <fstream>
 #include <limits>
 
-using namespace cnc::common;
+using namespace cnc;
 using namespace cnc::server;
 
 using boost::asio::ip::tcp;
@@ -33,7 +33,7 @@ void potential_client::close()
 	m_socket.close();
 }
 
-task<protocol::hello_data> potential_client::recv_hello()
+common::task<protocol::hello_data> potential_client::recv_hello()
 {
 	auto header = co_await send::session::recv_header(m_socket);
 	if (header.get_type() != types::HELLO)
@@ -41,12 +41,12 @@ task<protocol::hello_data> potential_client::recv_hello()
 		//throw unexpected_message_error(*this, header);
 
 	auto payload = co_await send::session::recv_msg(m_socket, header.get_payload_size());
-	auto data = deserialize<protocol::hello_data>(payload);
+	auto data = common::deserialize<protocol::hello_data>(payload);
 	m_hello_received = true;
 	co_return data;
 }
 
-task<void> potential_client::reject(const std::string &msg)
+common::task<void> potential_client::reject(const std::string &msg)
 {
 	if (!m_hello_received)
 		throw std::runtime_error("hello not yet received");
@@ -54,7 +54,7 @@ task<void> potential_client::reject(const std::string &msg)
 	co_await send::session::send_msg(m_socket, types::ERR, msg);
 }
 
-task<void> potential_client::accept()
+common::task<void> potential_client::accept()
 {
 	if (!m_hello_received)
 		throw std::runtime_error("hello not yet received");
@@ -73,7 +73,7 @@ client::client(potential_client session, protocol::hello_data data)
 
 }
 
-std::future<void> client::run()
+common::task<void> client::run()
 {
 	if (m_running)
 		throw std::runtime_error("already running");
@@ -90,7 +90,7 @@ std::future<void> client::run()
 			{
 			case types::RECV_FILE:
 			{
-				auto path = deserialize<std::filesystem::path>(co_await send::session::recv_msg(m_socket, header.get_payload_size()));
+				auto path = common::deserialize<std::filesystem::path>(co_await send::session::recv_msg(m_socket, header.get_payload_size()));
 				if (!std::filesystem::is_directory(path))
 				{
 					if (!std::filesystem::create_directories(path.parent_path()))
@@ -110,14 +110,14 @@ std::future<void> client::run()
 				auto blob_header = co_await send::session::recv_header(m_socket);
 				if (blob_header.get_type() != types::BLOB)
 					throw std::runtime_error("unexpected_message");
-				//throw unexpected_message_error(*this, blob_header);
+					//throw unexpected_message_error(*this, blob_header);
 
 				co_await send::session::recv_stream(m_socket, file, header.get_payload_size());
 				break;
 			}
 			case types::SEND_FILE:
 			{
-				auto path = deserialize<std::filesystem::path>(co_await send::session::recv_msg(m_socket, header.get_payload_size()));
+				auto path = common::deserialize<std::filesystem::path>(co_await send::session::recv_msg(m_socket, header.get_payload_size()));
 				std::ifstream file(path.native(), std::ios::in | std::ios::binary);
 				if (!file)
 				{
@@ -127,7 +127,10 @@ std::future<void> client::run()
 
 				auto size = std::filesystem::file_size(path);
 				if (size > std::numeric_limits<protocol::header::size_type>::max())
-					throw std::range_error("file too big");
+				{
+					co_await send::session::send_msg(m_socket, types::ERR, "file too big");
+					break;
+				}
 
 				co_await send::session::send_stream(m_socket, types::BLOB, file, static_cast<protocol::header::size_type>(size));
 				break;
@@ -163,4 +166,34 @@ void client::stop()
 
 	m_stopping = true;
 	close();
+}
+
+common::task<std::string> client::exec(const std::string &cmd)
+{
+	struct [[nodiscard]] Awaitable
+	{
+		std::experimental::coroutine_handle<> m_handle = nullptr;
+		std::variant<std::monostate, std::exception_ptr, std::string> m_result;
+
+		bool await_ready() const { return false; }
+		void await_suspend(std::experimental::coroutine_handle<> handle)
+		{
+			m_handle = handle;
+		}
+
+		void await_resume()
+		{
+			if (m_result.index() == 1)
+				std::rethrow_exception(std::get<1>(m_result));
+		}
+	};
+
+	Awaitable task;
+	m_exec_queue.push([&](std::variant<std::monostate, std::exception_ptr, std::string> result)
+	{
+		task.m_result = result;				
+	});
+
+	co_await task;
+	co_return std::get<1>(task.m_result);
 }

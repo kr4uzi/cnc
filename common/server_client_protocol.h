@@ -5,6 +5,7 @@
 #include <ostream>
 #include <boost/asio/ip/address.hpp>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/string.hpp>
 
 namespace cnc { namespace common { namespace server { namespace client {
 	struct protocol
@@ -22,6 +23,7 @@ namespace cnc { namespace common { namespace server { namespace client {
 			RECV_FILE,		// payload: path, answer: OK|{ERROR + string}
 			SEND_FILE,		// payload: path, answer: OK|{ERROR + string}
 			BLOB,			// payload: byte[], answer: none
+			EXEC,			// payload: string, answer: {OK + string}|{ERROR + string}
 			CONNECT,		// payload: connect_data, answer: OK|{ERROR + string}
 			QUIT,			// payload: none|string, answer: OK|{ERROR + string}
 
@@ -59,6 +61,21 @@ namespace cnc { namespace common { namespace server { namespace client {
 				ar & mac;
 			}
 		};
+
+		struct exec_msg
+		{
+			std::uint8_t type;
+			std::string msg;
+
+		private:
+			friend class boost::serialization::access;
+			template<class Archive>
+			void serialize(Archive &ar, const unsigned int version)
+			{
+				ar & type;
+				ar & msg;
+			}
+		};
 	};
 
 	template<class CharT, class Traits>
@@ -74,6 +91,7 @@ namespace cnc { namespace common { namespace server { namespace client {
 		case types::RECV_FILE:	return os << "RECV_FILE";
 		case types::SEND_FILE:	return os << "SEND_FILE";
 		case types::BLOB:		return os << "BLOB";
+		case types::EXEC:		return os << "EXEC";
 		case types::CONNECT:	return os << "CONNECT";
 		case types::QUIT:		return os << "QUIT";
 		}

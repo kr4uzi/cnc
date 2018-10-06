@@ -31,6 +31,6 @@ namespace cnc { namespace server {
 		void stop();
 		bool stopping() const { return m_stopping; }
 
-		std::vector<client_data> data() const;
+		const std::list<client> &clients() const { return m_clients; }
 	};
 } }

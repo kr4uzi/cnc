@@ -1,7 +1,12 @@
 #pragma once
 #include <common/task.h>
+#include <common/event.h>
 #include <common/server_client_protocol.h>
 #include <boost/asio/ip/tcp.hpp>
+#include <queue>
+#include <functional>
+#include <variant>
+#include <string>
 
 namespace cnc { namespace server {
 		class potential_client
@@ -37,6 +42,7 @@ namespace cnc { namespace server {
 			bool m_stopping = false;
 			bool m_quit = false;
 			protocol::hello_data m_data;
+			std::queue<event> m_exec_queue;
 
 		public:
 			client(potential_client session, protocol::hello_data hello_data);
@@ -51,6 +57,8 @@ namespace cnc { namespace server {
 
 			const protocol::hello_data &data() const { return m_data; }
 			const common::mac_addr &mac() const { return m_data.mac; }
+
+			common::task<std::string> exec(const std::string &cmd);
 		};
 	}
 }

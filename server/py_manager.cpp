@@ -1,4 +1,5 @@
 #include "py_manager.h"
+#include "client.h"
 #include "client_manager.h"
 #include "command_client_manager.h"
 #include <boost/asio/steady_timer.hpp>
@@ -27,12 +28,12 @@ PYBIND11_EMBEDDED_MODULE(host, m)
 
 	m.def("sendMessageToClient", [](const boost::asio::ip::address &addr, const std::string &msg, py::function callback)
 	{
-		py_manager::instance().sendMessageToClient(addr, msg, callback);
+		return py_manager::instance().sendMessageToClient(addr, msg, callback);
 	});
 
 	m.def("sendMessageToCommander", [](boost::asio::ip::address &addr, const std::string &msg, pybind11::function callback)
 	{
-		py_manager::instance().sendMessageToCommander(addr, msg, callback);
+		return py_manager::instance().sendMessageToCommander(addr, msg, callback);
 	});
 }
 } }
@@ -60,6 +61,24 @@ void py_manager::unregisterHandler(const std::string &name, py::function func)
 	handlers.erase(std::remove_if(handlers.begin(), handlers.end(), [&func](const auto &obj) { return func.is(obj); }), handlers.end());
 }
 
+void py_manager::sendMessageToClient(const boost::asio::ip::address &addr, const std::string &msg, pybind11::function callback)
+{
+	for (auto &client : m_clients.clients())
+	{
+		if (client.ip() == addr)
+		{
+
+
+			break;
+		}
+	}
+}
+
+void py_manager::sendMessageToCommander(const boost::asio::ip::address &addr, const std::string &msg, pybind11::function callback)
+{
+
+}
+
 common::task<void> py_manager::run(std::chrono::steady_clock::duration clock, std::chrono::steady_clock::duration time)
 {
 	if (m_running)
@@ -72,7 +91,6 @@ common::task<void> py_manager::run(std::chrono::steady_clock::duration clock, st
 	m_running = true;
 	py::scoped_interpreter interpreter{};
 
-	//py::gil_scoped_acquire scope;
 	auto sys = py::module::import("sys");
 	sys.attr("path") = std::array<std::string, 3>{ ".", "python", "python37.zip" };
 	sys.attr("dont_write_bytecode") = true;

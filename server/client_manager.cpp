@@ -129,12 +129,3 @@ std::future<void> client_manager::run()
 	m_running = false;
 	m_stopping = false;
 }
-
-std::vector<client_data> client_manager::data() const
-{
-	std::vector<client_data> datas;
-	for (auto &client : m_clients)
-		datas.push_back({ client.ip(), client.mac() });
-
-	return datas;
-}

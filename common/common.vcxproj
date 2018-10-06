@@ -138,6 +138,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="config.cpp" />
+    <ClCompile Include="event.cpp" />
     <ClCompile Include="mac_addr.cpp" />
     <ClCompile Include="mac_addrs_win.cpp" />
     <ClCompile Include="serialize_network.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="async_net.h" />
     <ClInclude Include="async_timer.h" />
     <ClInclude Include="default_deserialize.h" />
+    <ClInclude Include="event.h" />
     <ClInclude Include="observer_client_send.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="header.h" />
