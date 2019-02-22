@@ -14,7 +14,7 @@ std::vector<common::mac_addr> common::get_mac_addresses()
 {
 	std::vector<std::uint8_t> buffer;
 	ULONG buff_len = 4096 * 16;
-	auto flags = GAA_FLAG_INCLUDE_PREFIX;//GAA_FLAG_SKIP_UNICAST | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME;
+	auto flags = GAA_FLAG_INCLUDE_PREFIX; // GAA_FLAG_SKIP_UNICAST | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME;
 	GetAdaptersAddresses(AF_INET, flags, nullptr, nullptr, &buff_len);
 	buffer.resize(buff_len);
 

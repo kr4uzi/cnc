@@ -1,6 +1,4 @@
 #pragma once
-#include "header.h"
-#include "default_deserialize.h"
 #include <string>
 #include <vector>
 #include <filesystem>
@@ -11,8 +9,6 @@ namespace cnc { namespace common { namespace observer { namespace client {
 	{
 		enum class types : std::uint8_t
 		{
-			FIRST_MEMBER_UNUSED,
-
 			// answer types
 			OK,					// string
 			ERR,				// string
@@ -25,15 +21,12 @@ namespace cnc { namespace common { namespace observer { namespace client {
 			CREATE_DIRECTORY,	// payload: path, answer: OK|{ERROR + string}
 			LIST_DIRECTORY,		// payload: path, answer: {OK + directory_view}|{ERROR + string}
 			EXECUTE,			// payload: command, answer: {OK + string}|{ERROR + string}
-			QUIT,				// payload: none|string, answer: OK|{ERROR + string}
-
-			LAST_MEMBER_UNUSED
+			QUIT				// payload: none|string, answer: OK|{ERROR + string}
 		};
 
 		static constexpr unsigned short tcp_port = 5003;
 		static constexpr std::uint8_t magic_byte = 0x3;
 
-		using header = header<protocol>;
 		using directory_view = std::vector<std::tuple<std::filesystem::path, std::filesystem::file_status>>;
 	};
 

@@ -2,14 +2,14 @@
 using namespace cnc::common;
 
 event::event(bool set) noexcept
-	: m_state(set), m_new_waiters(nullptr), m_waiters(nullptr)
+	: m_set(set)
 {
 
 }
 
 event::~event()
 {
-
+	
 }
 
 event::awaiter event::operator co_await() const noexcept

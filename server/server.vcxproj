@@ -58,28 +58,28 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="C:\boost_1_67_0\boost.props" />
+    <Import Project="C:\boost_1_69_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
     <Import Project="C:\Python37-32\python.props" />
     <Import Project="C:\pybind11\pybind11.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="C:\boost_1_67_0\boost.props" />
+    <Import Project="C:\boost_1_69_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
     <Import Project="C:\Python37-32\python.props" />
     <Import Project="C:\pybind11\pybind11.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="C:\boost_1_67_0\boost.props" />
+    <Import Project="C:\boost_1_69_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
     <Import Project="C:\Python37-64\python.props" />
     <Import Project="C:\pybind11\pybind11.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="C:\boost_1_67_0\boost.props" />
+    <Import Project="C:\boost_1_69_0\boost.props" />
     <Import Project="..\json_spirit\json_spirit.props" />
     <Import Project="C:\Python37-64\python.props" />
     <Import Project="C:\pybind11\pybind11.props" />

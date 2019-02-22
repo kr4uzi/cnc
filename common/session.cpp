@@ -1,6 +1,6 @@
 #include "session.h"
 
-void cnc::common::set_timeout(boost::asio::ip::tcp::socket & socket, unsigned int ms)
+void cnc::common::set_timeout(boost::asio::ip::tcp::socket &socket, unsigned int ms)
 {
 #ifdef _WIN32
 	int timeout = ms;
