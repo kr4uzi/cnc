@@ -24,42 +24,33 @@
     <ClCompile Include="serialize_network.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="server_observer_protocol.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="server_client_protocol.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="observer_client_protocol.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mac_addr.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="observer_client_send.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="session.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="server_client_send.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="server_observer_send.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mac_addrs_win.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="event.cpp">
+    <ClCompile Include="bot_send.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cmd_relay_protocol.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cmd_relay_send.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cmd_protocol.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cmd_send.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bot_protocol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="serialize_tuple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="serialize_filesystem.h">
@@ -71,37 +62,37 @@
     <ClInclude Include="mac_addr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="server_client_protocol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="server_observer_protocol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="observer_client_protocol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="default_deserialize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="async_timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="observer_client_send.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="session.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="server_client_send.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="server_observer_send.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="async_net.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="event.h">
+    <ClInclude Include="header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bot_protocol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bot_send.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cmd_relay_protocol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cmd_relay_send.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cmd_protocol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cmd_send.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

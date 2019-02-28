@@ -1,13 +1,13 @@
 #pragma once
-#include <string>
+#include "default_deserialize.h"
 #include <vector>
 #include <filesystem>
-#include <tuple>
+#include <ostream>
 
-namespace cnc { namespace common { namespace observer { namespace client {
-	struct protocol
+namespace cnc { namespace common {
+	struct cmd_relay_protocol
 	{
-		enum class types : std::uint8_t
+		enum class types
 		{
 			// answer types
 			OK,					// string
@@ -24,16 +24,20 @@ namespace cnc { namespace common { namespace observer { namespace client {
 			QUIT				// payload: none|string, answer: OK|{ERROR + string}
 		};
 
-		static constexpr unsigned short tcp_port = 5003;
-		static constexpr std::uint8_t magic_byte = 0x3;
+		static constexpr std::uint8_t magic_byte = 0xAB;
 
-		using directory_view = std::vector<std::tuple<std::filesystem::path, std::filesystem::file_status>>;
+		struct directory_entry
+		{
+			std::filesystem::path path;
+			std::filesystem::file_status status;
+		};
+		typedef std::vector<directory_entry> directory_view;
 	};
 
 	template<class CharT, class Traits>
-	std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const protocol::types &type)
+	std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, cmd_relay_protocol::types type)
 	{
-		using types = protocol::types;
+		using types = typename cmd_protocol::types;
 		switch (type)
 		{
 		case types::OK:			return os << "OK";
@@ -49,12 +53,10 @@ namespace cnc { namespace common { namespace observer { namespace client {
 		case types::QUIT:		return os << "QUIT";
 		}
 
-		throw std::runtime_error("unknown client::protocol type");
+		throw std::runtime_error("unknown cmd_protocol type");
 	}
-} } } }
 
-namespace cnc { namespace common {
-	std::string serialize(const observer::client::protocol::directory_view &view);
+	std::string serialize(const cmd_relay_protocol::directory_view &view);
 	template<>
-	observer::client::protocol::directory_view deserialize<observer::client::protocol::directory_view>(const std::string &str);
+	cmd_relay_protocol::directory_view deserialize<cmd_relay_protocol::directory_view>(const std::string &str);
 } }

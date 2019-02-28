@@ -1,16 +1,12 @@
 #pragma once
+#include <cstddef>
 #include <array>
 #include <string>
 #include <vector>
 #include <ostream>
 
 namespace cnc { namespace common {
-	struct mac_addr : std::array<unsigned char, 6>
-	{
-		using base_type = std::array<unsigned char, 6>;
-		static constexpr std::size_t bytes = std::tuple_size<base_type>::value;
-	};
-	//using mac_addr = std::array<unsigned char, 6>;
+	typedef std::array<unsigned char, 6> mac_addr;
 
 	std::string to_string(const mac_addr &addr);
 

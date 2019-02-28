@@ -7,7 +7,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cnc", "cnc\cnc.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "server", "server\server.vcxproj", "{3FA01525-C732-4693-AD4B-6436BACFA9FE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "client", "client\client.vcxproj", "{97567038-20E9-4A95-A10A-8DDE93AD706D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bot", "bot\bot.vcxproj", "{97567038-20E9-4A95-A10A-8DDE93AD706D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{3772F55C-E4FD-44AF-AF7C-81BAD1F8DB8A} = {3772F55C-E4FD-44AF-AF7C-81BAD1F8DB8A}
 	EndProjectSection

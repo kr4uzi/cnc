@@ -1,7 +1,7 @@
 #include "config.h"
 #include <fstream>
 #include <algorithm>
-#include <boost/algorithm/string.hpp>
+#include <cctype>
 
 using namespace cnc::common;
 
@@ -52,7 +52,8 @@ bool config::exists(const std::string& key) const
 	return m_values.find(key) != m_values.end();
 }
 
-std::vector<std::string> config::get_array(const std::string &key, const std::vector<std::string>default_value) const
+template<>
+std::vector<std::string> config::get(const std::string &key, const std::vector<std::string> &default_value) const
 {
 	auto iter = m_values.find(key);
 	if (iter == m_values.end())
@@ -61,7 +62,8 @@ std::vector<std::string> config::get_array(const std::string &key, const std::ve
 	return iter->second;
 }
 
-std::string config::get_string(const std::string &key, const std::string &default_value) const
+template<>
+std::string config::get(const std::string &key, const std::string &default_value) const
 {
 	auto iter = m_values.find(key);
 	if (iter == m_values.end())
@@ -70,7 +72,8 @@ std::string config::get_string(const std::string &key, const std::string &defaul
 	return iter->second.front();
 }
 
-std::uint32_t config::get_uint32(const std::string &key, std::uint32_t default_value) const
+template<>
+std::uint32_t config::get(const std::string &key, std::uint32_t default_value) const
 {
 	auto iter = m_values.find(key);
 	if (iter == m_values.end())
@@ -79,7 +82,8 @@ std::uint32_t config::get_uint32(const std::string &key, std::uint32_t default_v
 	return std::stoul(iter->second.front());
 }
 
-std::uint64_t config::get_uint64(const std::string &key, std::uint64_t default_value) const
+template<>
+std::uint64_t config::get(const std::string &key, std::uint64_t default_value) const
 {
 	auto iter = m_values.find(key);
 	if (iter == m_values.end())
@@ -88,7 +92,8 @@ std::uint64_t config::get_uint64(const std::string &key, std::uint64_t default_v
 	return std::stoul(iter->second.front());
 }
 
-float config::get_float(const std::string &key, float default_value) const
+template<>
+float config::get(const std::string &key, float default_value) const
 {
 	auto iter = m_values.find(key);
 	if (iter == m_values.end())
@@ -97,7 +102,8 @@ float config::get_float(const std::string &key, float default_value) const
 	return std::stof(iter->second.front());
 }
 
-double config::get_double(const std::string &key, double default_value) const
+template<>
+double config::get(const std::string &key, double default_value) const
 {
 	auto iter = m_values.find(key);
 	if (iter == m_values.end())
@@ -106,7 +112,8 @@ double config::get_double(const std::string &key, double default_value) const
 	return std::stod(iter->second.front());
 }
 
-long double config::get_ldouble(const std::string &key, long double default_value) const
+template<>
+long double config::get(const std::string &key, long double default_value) const
 {
 	auto iter = m_values.find(key);
 	if (iter == m_values.end())
@@ -115,14 +122,15 @@ long double config::get_ldouble(const std::string &key, long double default_valu
 	return std::stold(iter->second.front());
 }
 
-bool config::get_bool(const std::string &key, bool default_value) const
+template<>
+bool config::get(const std::string &key, bool default_value) const
 {
 	auto iter = m_values.find(key);
 	if (iter == m_values.end())
 		return default_value;
 
 	auto value = iter->second.front();
-	boost::to_lower(value);
+	std::transform(value.begin(), value.end(), value.begin(), std::tolower);
 	if (value == "true" || value == "1")
 		return true;
 	else if (value == "false" || value == "0")
@@ -133,7 +141,7 @@ bool config::get_bool(const std::string &key, bool default_value) const
 	return default_value;
 }
 
-void config::set_string(const std::string& key, const std::string &value)
+void config::set(const std::string& key, const std::string &value)
 {
 	if (exists(key))
 		m_values[key].front() = value;
@@ -141,7 +149,7 @@ void config::set_string(const std::string& key, const std::string &value)
 		m_values[key].push_back(value);
 }
 
-void config::set_uint32(const std::string& key, std::uint32_t value)
+void config::set(const std::string& key, std::uint32_t value)
 {
 	if (exists(key))
 		m_values[key].front() = std::to_string(value);
@@ -149,7 +157,7 @@ void config::set_uint32(const std::string& key, std::uint32_t value)
 		m_values[key].push_back(std::to_string(value));
 }
 
-void config::set_uint64(const std::string& key, std::uint64_t value)
+void config::set(const std::string& key, std::uint64_t value)
 {
 	if (exists(key))
 		m_values[key].front() = std::to_string(value);
@@ -157,7 +165,7 @@ void config::set_uint64(const std::string& key, std::uint64_t value)
 		m_values[key].push_back(std::to_string(value));
 }
 
-void config::set_float(const std::string& key, float value)
+void config::set(const std::string& key, float value)
 {
 	if (exists(key))
 		m_values[key].front() = std::to_string(value);
@@ -165,7 +173,7 @@ void config::set_float(const std::string& key, float value)
 		m_values[key].push_back(std::to_string(value));
 }
 
-void config::set_double(const std::string& key, double value)
+void config::set(const std::string& key, double value)
 {
 	if (exists(key))
 		m_values[key].front() = std::to_string(value);
@@ -173,7 +181,7 @@ void config::set_double(const std::string& key, double value)
 		m_values[key].push_back(std::to_string(value));
 }
 
-void config::set_ldouble(const std::string& key, long double value)
+void config::set(const std::string& key, long double value)
 {
 	if (exists(key))
 		m_values[key].front() = std::to_string(value);
@@ -181,7 +189,7 @@ void config::set_ldouble(const std::string& key, long double value)
 		m_values[key].push_back(std::to_string(value));
 }
 
-void config::set_bool(const std::string& key, bool value)
+void config::set(const std::string& key, bool value)
 {
 	std::string strvalue = value ? "true" : "false";
 	if (exists(key))

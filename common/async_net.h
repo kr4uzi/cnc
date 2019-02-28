@@ -1,8 +1,8 @@
 #pragma once
-#include <boost/asio/basic_socket.hpp>
 #include <boost/asio/basic_socket_acceptor.hpp>
-#include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
+#include <boost/asio/read.hpp>
+#include <system_error>
 #include <experimental/coroutine>
 
 namespace cnc { namespace common {
@@ -11,24 +11,24 @@ namespace cnc { namespace common {
 	{
 		struct [[nodiscard]] Awaitable
 		{
-			Socket &m_socket;
-			Endpoint &m_endpoint;
-			boost::system::error_code m_error_code;
+			Socket &socket;
+			Endpoint &endpoint;
+			std::error_code error_code;
 
 			bool await_ready() { return false; }
 			void await_suspend(std::experimental::coroutine_handle<> handle)
 			{
-				m_socket.async_connect(m_endpoint, [this, handle](auto error)
+				socket.async_connect(endpoint, [this, handle](auto error)
 				{
-					m_error_code = error;
+					error_code = error;
 					handle.resume();
 				});
 			}
 
 			void await_resume()
 			{
-				if (m_error_code)
-					throw boost::system::system_error(m_error_code);
+				if (error_code)
+					throw std::system_error(error_code);
 			}
 		};
 
@@ -42,7 +42,7 @@ namespace cnc { namespace common {
 		{
 			decltype(acceptor) &acceptor;
 			typename Protocol::socket socket;
-			boost::system::error_code error_code;
+			std::error_code error_code;
 
 			bool await_ready() { return false; }
 			void await_suspend(std::experimental::coroutine_handle<> handle)
@@ -57,7 +57,7 @@ namespace cnc { namespace common {
 			auto await_resume()
 			{
 				if (error_code)
-					throw boost::system::system_error(error_code);
+					throw std::system_error(error_code);
 
 				return std::move(socket);
 			}
@@ -73,7 +73,7 @@ namespace cnc { namespace common {
 		{
 			AsyncStream& stream;
 			BufferSequence const& buffer;
-			boost::system::error_code error_code;
+			std::error_code error_code;
 			std::size_t bytes;
 
 			bool await_ready() { return false; }
@@ -90,7 +90,7 @@ namespace cnc { namespace common {
 			auto await_resume()
 			{
 				if (error_code)
-					throw boost::system::system_error(error_code);
+					throw std::system_error(error_code);
 
 				return bytes;
 			}
@@ -106,7 +106,7 @@ namespace cnc { namespace common {
 		{
 			AsyncStream& stream;
 			BufferSequence const& buffer;
-			boost::system::error_code error_code;
+			std::error_code error_code;
 
 			bool await_ready() { return false; }
 			void await_suspend(std::experimental::coroutine_handle<> handle)
@@ -121,7 +121,7 @@ namespace cnc { namespace common {
 			void await_resume()
 			{
 				if (error_code)
-					throw boost::system::system_error(error_code);
+					throw std::system_error(error_code);
 			}
 		};
 
@@ -135,7 +135,7 @@ namespace cnc { namespace common {
 		{
 			AsyncStream& stream;
 			BufferSequence const& buffer;
-			boost::system::error_code error_code;
+			std::error_code error_code;
 
 			bool await_ready() { return false; }
 			void await_suspend(std::experimental::coroutine_handle<> handle)
@@ -150,7 +150,7 @@ namespace cnc { namespace common {
 			void await_resume()
 			{
 				if (error_code)
-					throw boost::system::system_error(error_code);
+					throw std::system_error(error_code);
 			}
 		};
 

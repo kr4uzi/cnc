@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{3772F55C-E4FD-44AF-AF7C-81BAD1F8DB8A}</ProjectGuid>
     <RootNamespace>common</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
     <VcpkgTriplet>x86-windows-static</VcpkgTriplet>
     <VcpkgEnabled>true</VcpkgEnabled>
   </PropertyGroup>
@@ -60,27 +60,19 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="C:\boost_1_69_0\boost.props" />
-    <Import Project="C:\cppcoro\cppcoro-debug-32.props" />
-    <Import Project="C:\magic_get\magic_get.props" />
+    <Import Project="..\..\..\..\..\..\boost_1_69_0\boost.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="C:\boost_1_69_0\boost.props" />
-    <Import Project="C:\cppcoro\cppcoro-release-32.props" />
-    <Import Project="C:\magic_get\magic_get.props" />
+    <Import Project="..\..\..\..\..\..\boost_1_69_0\boost.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="C:\cppcoro\cppcoro-debug-64.props" />
-    <Import Project="C:\boost_1_69_0\boost.props" />
-    <Import Project="C:\magic_get\magic_get.props" />
+    <Import Project="..\..\..\..\..\..\boost_1_69_0\boost.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="C:\boost_1_69_0\boost.props" />
-    <Import Project="C:\cppcoro\cppcoro-release-64.props" />
-    <Import Project="C:\magic_get\magic_get.props" />
+    <Import Project="..\..\..\..\..\..\boost_1_69_0\boost.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -150,36 +142,33 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="config.cpp" />
-    <ClCompile Include="event.cpp" />
     <ClCompile Include="mac_addr.cpp" />
     <ClCompile Include="mac_addrs_win.cpp" />
     <ClCompile Include="serialize_network.cpp" />
     <ClCompile Include="serialize_filesystem.cpp" />
-    <ClCompile Include="server_client_protocol.cpp" />
-    <ClCompile Include="server_observer_send.cpp" />
-    <ClCompile Include="server_observer_protocol.cpp" />
-    <ClCompile Include="observer_client_protocol.cpp" />
-    <ClCompile Include="observer_client_send.cpp" />
-    <ClCompile Include="session.cpp" />
-    <ClCompile Include="server_client_send.cpp" />
+    <ClCompile Include="bot_protocol.cpp" />
+    <ClCompile Include="cmd_send.cpp" />
+    <ClCompile Include="cmd_protocol.cpp" />
+    <ClCompile Include="cmd_relay_protocol.cpp" />
+    <ClCompile Include="cmd_relay_send.cpp" />
+    <ClCompile Include="bot_send.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="async_net.h" />
     <ClInclude Include="async_timer.h" />
     <ClInclude Include="default_deserialize.h" />
-    <ClInclude Include="event.h" />
-    <ClInclude Include="observer_client_send.h" />
+    <ClInclude Include="header.h" />
+    <ClInclude Include="cmd_relay_send.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="mac_addr.h" />
-    <ClInclude Include="server_observer_protocol.h" />
+    <ClInclude Include="cmd_protocol.h" />
     <ClInclude Include="serialize_network.h" />
     <ClInclude Include="serialize_filesystem.h" />
-    <ClInclude Include="serialize_tuple.h" />
-    <ClInclude Include="server_client_protocol.h" />
-    <ClInclude Include="server_observer_send.h" />
-    <ClInclude Include="observer_client_protocol.h" />
+    <ClInclude Include="bot_protocol.h" />
+    <ClInclude Include="cmd_send.h" />
+    <ClInclude Include="cmd_relay_protocol.h" />
     <ClInclude Include="session.h" />
-    <ClInclude Include="server_client_send.h" />
+    <ClInclude Include="bot_send.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

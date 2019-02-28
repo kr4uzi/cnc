@@ -3,25 +3,24 @@
 #include <map>
 #include <cstdint>
 #include <vector>
+#include <stdexcept>
+#include <type_traits>
 
 namespace cnc { namespace common {
 	class config
 	{
 	public:
-		class parse_error
+		class parse_error : public std::runtime_error
 		{
-		private:
-			std::string error_message;
+			bool m_is_set;
 
 		public:
 			parse_error(const std::string& error_message)
-				: error_message(error_message)
-			{
+				: std::runtime_error(error_message), m_is_set(!error_message.empty())
+			{ }
 
-			}
-
-			std::string what() const { return error_message; }
-			bool operator!() const { return error_message.empty(); }
+			bool operator!() const { return !m_is_set; }
+			operator bool() const { return m_is_set; }
 		};
 
 	private:
@@ -32,21 +31,41 @@ namespace cnc { namespace common {
 
 		bool exists(const std::string& key) const;
 
-		std::string get_string(const std::string& key, const std::string &default_value) const;
-		std::uint32_t get_uint32(const std::string& key, std::uint32_t default_value) const;
-		std::uint64_t get_uint64(const std::string& key, std::uint64_t default_value) const;
-		float get_float(const std::string& key, float default_value) const;
-		double get_double(const std::string& key, double default_value) const;
-		long double get_ldouble(const std::string& key, long double default_value) const;
-		bool get_bool(const std::string& key, bool default_value) const;
-		std::vector<std::string> get_array(const std::string &key, const std::vector<std::string>default_value) const;
+		template<class T, typename = std::enable_if_t<std::is_class_v<T>>>
+		T get(const std::string &key, const T &default_value) const
+		{
+			static_assert(false, "not implemented");
+		}
 
-		void set_string(const std::string& key, const std::string &value);
-		void set_uint32(const std::string& key, std::uint32_t value);
-		void set_uint64(const std::string& key, std::uint64_t value);
-		void set_float(const std::string& key, float value);
-		void set_double(const std::string& key, double value);
-		void set_ldouble(const std::string& key, long double value);
-		void set_bool(const std::string& key, bool value);
+		template<class T, typename = std::enable_if_t<!std::is_class_v<T>>>
+		T get(const std::string &key, T defaultValue) const
+		{
+			static_assert(false, "not implemented");
+		}
+
+		template<>
+		std::string get(const std::string& key, const std::string &default_value) const;
+		template<>
+		std::uint32_t get(const std::string& key, std::uint32_t default_value) const;
+		template<>
+		std::uint64_t get(const std::string& key, std::uint64_t default_value) const;
+		template<>
+		float get(const std::string& key, float default_value) const;
+		template<>
+		double get(const std::string& key, double default_value) const;
+		template<>
+		long double get(const std::string& key, long double default_value) const;
+		template<>
+		bool get(const std::string& key, bool default_value) const;
+		template<>
+		std::vector<std::string> get(const std::string &key, const std::vector<std::string> &default_value) const;
+
+		void set(const std::string& key, const std::string &value);
+		void set(const std::string& key, std::uint32_t value);
+		void set(const std::string& key, std::uint64_t value);
+		void set(const std::string& key, float value);
+		void set(const std::string& key, double value);
+		void set(const std::string& key, long double value);
+		void set(const std::string& key, bool value);
 	};
 } }

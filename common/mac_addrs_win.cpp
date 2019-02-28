@@ -35,7 +35,7 @@ std::vector<common::mac_addr> common::get_mac_addresses()
 					for (ULONG i = 0; i < ptr->PhysicalAddressLength; i++)
 						bytes[i] = ptr->PhysicalAddress[i];
 
-					if (bytes.size() == mac_addr::bytes)
+					if (bytes.size() == std::tuple_size<mac_addr>::value)
 					{
 						mac_addr addr;
 						std::copy_n(bytes.begin(), bytes.size(), addr.begin());

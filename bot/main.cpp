@@ -1,15 +1,14 @@
 #include "server_session.h"
-#include <common/server_client_protocol.h>
 #include <boost/program_options.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <boost/asio/experimental.hpp>
+#include <experimental/resumable>
 #include <string>
 #include <regex>
 #include <iostream>
 #include <thread>
 #include <variant>
 using namespace cnc;
-using namespace cnc::client;
 
 namespace cnc {
 	namespace common {
@@ -78,7 +77,7 @@ int main(int argc, char *argv[])
 	desc.add_options()
 		("help", "produces this help message")
 		("ip", po::value<boost::asio::ip::address>(&ip)->required()->default_value(boost::asio::ip::make_address("127.0.0.1")), "sets the ip address")
-		("port", po::value<unsigned short>(&port)->required()->default_value(cnc::common::server::client::protocol::tcp_port), "sets the port")
+		("port", po::value<unsigned short>(&port)->required()->default_value(5000), "sets the port")
 		("mac", po_mac, "sets the mac address")
 		;
 
@@ -109,9 +108,9 @@ int main(int argc, char *argv[])
 
 	boost::asio::io_context context;
 	boost::asio::signal_set signals{ context, SIGINT, SIGTERM };
-	server::session session{ context };
+	bot::server_session session{ context };
 
-	auto session_task = [&]() -> common::task<void>
+	boost::asio::experimental::co_spawn(context, [&]() -> bot::server_session::awaitable_type<void>
 	{
 		try
 		{
@@ -130,7 +129,6 @@ int main(int argc, char *argv[])
 			}
 
 			session.close();
-			// no return value = no longer running = stopped e.g. by CTRL + C
 		}
 		catch (std::exception &e)
 		{
@@ -142,29 +140,21 @@ int main(int argc, char *argv[])
 		}
 
 		signals.cancel();
-	}();	
+	}, boost::asio::experimental::detached);	
 
 	signals.async_wait([&](auto error, auto signal)
 	{
 		if (error)
 			return;
 
-		static bool stopping;
-		if (stopping)
+		if (session.state() == bot::server_session::session_state::STOPPING)
 		{
 			std::cout << "already exiting ...\n";
 			return;
 		}
 
-		stopping = true;
 		std::cout << "exiting ...\n";
-		[&]() -> common::task<void>
-		{
-			session.stop();
-			co_await session_task;
-			session.close();
-			context.stop();
-		}();
+		session.stop();
 	});
 
 	context.run();
