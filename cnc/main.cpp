@@ -1,113 +1,264 @@
-#include "../common/client_session.h"
-#include "../common/serialize_filesystem.h"
+#include "server_session.h"
+#include <curses.h>
+#include <boost/asio.hpp>
+#include <boost/signals2.hpp>
+#include <vector>
+#include <string>
 #include <functional>
+#include <thread>
+using namespace cnc;
 
-using boost::asio::ip::tcp;
-using boost::asio::yield_context;
-using cnc::client::protocol;
-using cnc::client::session;
-using types = protocol::types;
-
-std::string create_file_content()
+class console
 {
-	std::string file_content;
-	for (std::uint64_t i = 0; i < 8500 * 1024; i++)
-		file_content += std::to_string(i);
+	boost::asio::io_context &m_context;
+	boost::asio::executor_work_guard<boost::asio::io_context::executor_type> m_work;
+	bool m_stopped = false;
+	WINDOW *m_tabs;
+	WINDOW *m_tab_border;
+	WINDOW *m_logs;
+	WINDOW *m_log_border;
+	WINDOW *m_input;
+	std::thread m_thread;
 
-	return file_content;
-}
+public:
+	std::vector<std::string> tabs;
+	bool tabs_changed = false;
+	std::vector<std::string> logs;
+	bool logs_changed = false;
+	std::string input;
+	bool input_changed = false;
 
-void send_file_recv_handler(session &sess, const std::filesystem::path &path, const std::string &file_content, helper &hlp, yield_context yield)
-{
-	auto header = sess.recv_header(yield);
-	sess.recv_msg(header.get_payload_size(), yield);
+	boost::signals2::signal<void(int)> on_input;
 
-	sess.send_msg(types::OK, yield);
-	std::stringstream ss;
-	ss << file_content;
-	sess.send_stream(types::BLOB, ss, file_content.length(), yield);
-}
-
-void send_file_recv(const std::filesystem::path &path, const std::string &file_content, helper &hlp, yield_context yield)
-{
-	auto sess = hlp.accept(yield);
-	send_file_recv_handler(sess, path, file_content, hlp, yield);
-}
-
-void send_file_send_handler(session &sess, const std::filesystem::path &path, const std::string &file_content, helper &hlp, yield_context yield)
-{
-	std::stringstream ss;
-	auto result = sess.send_file(path, ss, yield);
-}
-
-void send_file_send(const std::filesystem::path &path, const std::string &content, helper &hlp, yield_context yield)
-{
-	auto sess = hlp.connect(yield);
-	send_file_send_handler(sess, path, content, hlp, yield);
-}
-
-struct helper
-{
-	boost::asio::io_context ctx;
-	tcp::acceptor acceptor;
-
-	helper()
-		: acceptor(ctx, tcp::endpoint(tcp::v4(), ::protocol::tcp_port))
+	console(boost::asio::io_context &context)
+		: m_context(context), m_work(boost::asio::make_work_guard(context))
 	{
+		initscr();
+		clear();
+		noecho();
+		cbreak();
 
+		m_tabs = newwin(1, COLS, 0, 0);
+
+		m_tab_border = newwin(1, COLS, 1, 0);
+		mvwhline(m_tab_border, 0, 0, '\0', COLS);
+		wrefresh(m_tab_border);
+
+		m_logs = newwin(LINES - 4, COLS, 2, 0);
+		scrollok(m_logs, TRUE);
+
+		m_log_border = newwin(1, COLS, LINES - 2, 0);
+		mvwhline(m_log_border, 0, 0, '\0', COLS);
+		wrefresh(m_log_border);
+
+		m_input = newwin(1, COLS, LINES - 1, 0);
+		keypad(m_input, TRUE);
+
+		m_thread = std::thread([&]
+		{
+			while (m_work.owns_work())
+			{
+				int key = wgetch(m_input);
+				if (key != ERR && m_work.owns_work())
+					m_context.dispatch([&] { on_input(key); });
+			}
+		});
 	}
 
-	session accept(boost::asio::yield_context yield_ctx)
+	void draw()
 	{
-		tcp::socket socket(ctx);
-		acceptor.async_accept(socket, yield_ctx);
-		return ::session(std::move(socket));
+		if (tabs_changed)
+		{
+			wclear(m_tabs);
+			wmove(m_tabs, 0, 0);
+
+			for (const auto &name : tabs)
+			{
+				for (const auto &ch : name)
+					waddch(m_tabs, ch);
+
+				whline(m_tabs, '\0', 1);
+			}
+
+			wrefresh(m_tabs);
+			tabs_changed = false;
+		}
+
+		if (logs_changed)
+		{
+			wclear(m_logs);
+			wmove(m_logs, 0, 0);
+
+			for (std::size_t i = 0; i < logs.size(); i++)
+			{
+				for (const auto &ch : logs[i])
+					waddch(m_logs, ch);
+
+				if (i != logs.size() - 1)
+					waddch(m_logs, '\n');
+			}
+
+			wrefresh(m_logs);
+			logs_changed = false;
+		}
+
+		if (input_changed)
+		{
+			wclear(m_input);
+			wmove(m_input, 0, 0);
+
+			for (const auto &ch : input)
+				waddch(m_input, ch);
+
+			wrefresh(m_input);
+			input_changed = false;
+		}
 	}
 
-	session connect(yield_context yield)
+	bool stopped() const noexcept { return m_stopped; }
+
+	void stop()
 	{
-		tcp::socket socket{ ctx };
-		socket.async_connect(tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), ::protocol::tcp_port), yield);
-		return ::session(std::move(socket));
+		if (m_stopped)
+			return;
+
+		m_stopped = true;
+		nodelay(m_input, TRUE);
+		m_work.reset();
+		if (m_thread.joinable())
+			m_thread.join();
 	}
 
-	void run()
+	~console()
 	{
-		ctx.run();
+		stop();
+		delwin(m_input);
+		delwin(m_log_border);
+		delwin(m_logs);
+		delwin(m_tab_border);
+		delwin(m_tabs);
+		endwin();
 	}
 
-	template<class F>
-	void spawn(F &&f)
+	void resize()
 	{
-		boost::asio::spawn(ctx, std::bind(std::forward<F>(f), std::ref(*this), std::placeholders::_1));
-	}
+		wresize(m_tabs, 1, COLS);
+		mvwin(m_tabs, 0, 0);
+		tabs_changed = true;
 
-	template<class F, class... Args>
-	void spawn(F &&f, Args &&...args)
-	{
-		boost::asio::spawn(ctx, std::bind(std::forward<F>(f), std::forward<Args>(args)..., std::ref(*this), std::placeholders::_1));
+		wresize(m_tab_border, 1, COLS);
+		mvwin(m_tab_border, 1, 0);
+		mvwhline(m_tab_border, 0, 0, '\0', COLS);
+
+		wresize(m_logs, LINES - 4, COLS);
+		mvwin(m_logs, 2, 0);
+
+		wresize(m_log_border, 1, COLS);
+		mvwin(m_log_border, LINES - 4, 0);
+		mvwhline(m_log_border, 0, 0, '\0', COLS);
+
+		wresize(m_input, 1, COLS);
+		mvwin(m_input, LINES - 5, 0);
 	}
 };
 
-void send_file_recv_multiple(unsigned count, const std::filesystem::path &path, const std::string &file_content, helper &hlp, yield_context yield)
+console &operator<<(console &con, const std::string &cmd)
 {
-	for (unsigned i = 0; i < count; i++)
-		hlp.spawn(send_file_recv, path, file_content);
-}
-
-void send_file_send_multiple(unsigned count, const std::filesystem::path &path, const std::string &file_content, helper &hlp, yield_context yield)
-{
-	for (unsigned i = 0; i < count; i++)
-		hlp.spawn(send_file_send, path, file_content);
+	con.logs.push_back(cmd);
+	return con;
 }
 
 int main()
 {
-	helper hlp;
-	std::filesystem::path path = R"(C:\some\file\path\file.txt)";
-	auto file_content = create_file_content();
-	unsigned count = 5;
-	hlp.spawn(send_file_recv_multiple, count, path, file_content);
-	hlp.spawn(send_file_send_multiple, count, path, file_content);
-	hlp.run();
+	boost::asio::io_context ctx;
+	console con(ctx);
+	server_session session(ctx, boost::asio::ip::make_address("127.0.0.1"), 8081);
+
+
+	session.on_hello.connect([&](auto data)
+	{
+		
+	});
+
+	std::vector<std::string> history;
+	std::size_t history_iter = 0;
+
+	con.on_input.connect([&](int c)
+	{
+		if (c == KEY_RESIZE)
+			con.resize();
+		else if (c == 3)
+		{
+			con.input.clear();
+			con.input_changed = true;
+		}
+		else if (c == 8 || c == 127 || c == KEY_BACKSPACE || c == KEY_DC)
+		{
+			if (!con.input.empty())
+			{
+				con.input.erase(con.input.size() - 1, 1);
+				con.input_changed = true;
+			}
+		}
+		else if (c == 9)
+			; // tab
+		else if (c == 10 || c == 13)
+		{
+			std::string cmd = con.input;
+			if (!cmd.empty())
+			{
+				history.push_back(cmd);
+				history_iter = history.size();
+
+				con.logs.push_back(cmd);
+				con.logs_changed = true;
+
+				con.input.clear();
+				con.input_changed = true;
+
+				if (cmd == "/help")
+				{
+					con << " /help                   : prints this message";
+					con << " /server <ip> <port>     : connect to server";
+					con << " /relay <mac>            : request client to connect to this machine";
+					con << " /dir <path>             : list directory of <path>";
+					con << " /exec <executable>      : execute <executable> print result";
+					con.logs_changed = true;
+				}
+			}
+		}
+		else if(32 <= c && c <= 255)
+		{
+			con.input += c;
+			con.input_changed = true;
+		}
+		else if (c == KEY_UP || c == KEY_DOWN)
+		{
+			if (c == KEY_UP && 0 < history_iter && history_iter <= history.size())			
+				history_iter--;
+			else if (c == KEY_DOWN && 0 <= history_iter && history_iter <= history.size())
+			{
+				history_iter++;
+				if (history_iter >= history.size())
+				{
+					history_iter = history.size();
+					con.input.clear();
+					goto skip;
+				}
+			}
+
+			con.input = history[history_iter];
+		skip:
+			con.input_changed = true;			
+		}
+		else
+		{
+			con.logs.push_back(std::to_string(c));
+			con.logs_changed = true;
+		}
+
+		con.draw();		
+	});
+
+	ctx.run();
 }

@@ -49,15 +49,31 @@ namespace cnc { namespace common {
 			co_await send_msg(socket, type, "");
 		}
 
-		static awaitable_type<void> send_msg(socket_type &socket, typename header_type::message_type type, const std::string &msg)
+		//static awaitable_type<void> send_msg(socket_type &socket, typename header_type::message_type type, const std::string &msg)
+		//{
+		//	header header(magic_byte, type, msg.length());
+		//	auto header_bytes = header.to_bytearray();
+		//	
+		//	std::vector<std::uint8_t> bytes;
+		//	bytes.reserve(header_bytes.size() + msg.size());
+		//	bytes.insert(bytes.end(), header_bytes.begin(), header_bytes.end());
+		//	bytes.insert(bytes.end(), msg.begin(), msg.end());
+
+		//	auto token = co_await boost::asio::experimental::this_coro::token();
+		//	co_await boost::asio::async_write(socket, boost::asio::buffer(bytes), token);
+		//	co_return;
+		//}
+
+		template<class T>
+		static awaitable_type<void> send_msg(socket_type &socket, typename header_type::message_type type, const T &msg)
 		{
-			header header(magic_byte, type, msg.length());
+			header header(magic_byte, type, std::size(msg));
 			auto header_bytes = header.to_bytearray();
-			
+
 			std::vector<std::uint8_t> bytes;
-			bytes.reserve(header_bytes.size() + msg.size());
+			bytes.reserve(header_bytes.size() + std::size(msg));
 			bytes.insert(bytes.end(), header_bytes.begin(), header_bytes.end());
-			bytes.insert(bytes.end(), msg.begin(), msg.end());
+			bytes.insert(bytes.end(), std::begin(msg), std::end(msg));
 
 			auto token = co_await boost::asio::experimental::this_coro::token();
 			co_await boost::asio::async_write(socket, boost::asio::buffer(bytes), token);

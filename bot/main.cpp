@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 			connect_msg << "connecting to " << ip << ":" << port << " with mac " << common::to_string(mac);
 
 			std::cout << connect_msg.str() << " ...\n";
-			co_await session.connect({ ip, port }, mac);
+			co_await session.connect({ ip, port }, common::bot_protocol::hello_data{ mac });
 			std::cout << connect_msg.str() << "... connection successfull\n";
 
 			auto result = co_await session.listen();

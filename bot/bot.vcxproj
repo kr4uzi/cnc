@@ -140,10 +140,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="relay_session.cpp" />
     <ClCompile Include="server_session.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="relay_session.h" />
     <ClInclude Include="server_session.h" />
   </ItemGroup>
   <ItemGroup>

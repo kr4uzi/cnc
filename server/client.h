@@ -1,7 +1,5 @@
 #pragma once
-#include <common/task.h>
-#include <common/event.h>
-#include <common/server_client_protocol.h>
+#include <common/bot_send.h>
 #include <boost/asio/ip/tcp.hpp>
 #include <queue>
 #include <functional>
@@ -14,20 +12,23 @@ namespace cnc { namespace server {
 			bool m_hello_received = false;
 			bool m_closed = false;
 
+		public:
+			template<class T>
+			using awaitable_type = common::bot_send::awaitable_type<T>;
+			using socket_type = common::bot_send::socket_type;
+
 		protected:
 			boost::asio::ip::tcp::socket m_socket;
 
-			using protocol = cnc::common::server::client::protocol;
-
 		public:
-			potential_client(boost::asio::ip::tcp::socket socket);
+			potential_client(socket_type socket);
 			potential_client(potential_client &&) = default;
 			potential_client &operator=(potential_client &&) = default;
 			~potential_client();
 
-			common::task<protocol::hello_data> recv_hello();
-			common::task<void> reject(const std::string &reason);
-			common::task<void> accept();
+			awaitable_type<common::bot_protocol::hello_data> recv_hello();
+			awaitable_type<void> reject(const std::string &reason);
+			awaitable_type<void> accept();
 
 			boost::asio::ip::address ip() const;
 
@@ -37,28 +38,27 @@ namespace cnc { namespace server {
 
 		class client : public potential_client
 		{
-		private:
 			bool m_running = false;
 			bool m_stopping = false;
 			bool m_quit = false;
-			protocol::hello_data m_data;
-			std::queue<event> m_exec_queue;
+			common::bot_protocol::hello_data m_data;
+			//std::queue<event> m_exec_queue;
 
 		public:
-			client(potential_client session, protocol::hello_data hello_data);
+			client(potential_client session, common::bot_protocol::hello_data hello_data);
 			client(client &&) = default;
 			client &operator=(client &&) = default;
 
-			common::task<void> run();
+			awaitable_type<void> run();
 			void stop();
 
 			bool quit() const { return m_quit; }
 			bool stopping() const { return m_stopping; }
 
-			const protocol::hello_data &data() const { return m_data; }
+			const common::bot_protocol::hello_data &data() const { return m_data; }
 			const common::mac_addr &mac() const { return m_data.mac; }
 
-			common::task<std::string> exec(const std::string &cmd);
+			awaitable_type<std::string> exec(const std::string &cmd);
 		};
 	}
 }

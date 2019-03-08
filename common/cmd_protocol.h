@@ -1,6 +1,8 @@
 #pragma once
 #include "bot_protocol.h"
 #include "default_deserialize.h"
+#include "serialize_network.h"
+#include "serialize_filesystem.h"
 #include "header.h"
 #include "mac_addr.h"
 #include <boost/asio/ip/address.hpp>

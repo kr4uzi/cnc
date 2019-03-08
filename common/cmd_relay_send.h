@@ -1,4 +1,5 @@
 #pragma once
+#include "bot_protocol.h"
 #include "cmd_relay_protocol.h"
 #include "session.h"
 #include <boost/asio/ip/tcp.hpp>
@@ -26,8 +27,7 @@ namespace cnc { namespace common {
 		};
 
 		typedef err_or_ok_result hello_result;
-		static awaitable_type<hello_result> hello(socket_type &socket);
-		static awaitable_type<hello_result> hello(socket_type &socket, const std::string &msg);
+		static awaitable_type<hello_result> hello(socket_type &socket, const bot_protocol::hello_data &msg);
 
 		typedef err_or_empty_ok_result create_directory_result;
 		static awaitable_type<create_directory_result> create_directory(socket_type &socket, const std::filesystem::path &path);
